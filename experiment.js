@@ -1,15 +1,20 @@
 import {TRANSITION_MATRICES, shuffleTransitionMatrix} from "./modules/matrices.js";
 
-const CONFIG = {
-	matrix_size: 4, // Will be randomly assigned: 4, 5, 6, 7, or 8
-	n_blocks: 5,
-	trials_per_block: 80,
-	practice_trials: 8, // 2x matrix size for practice
+const EXPERIMENT_CONFIG = {
+	datapipe_id: "Sz1Mxzs1KPOg",
+	matrix_size: null, // Will be randomly assigned: 4, 5, 6, 7, or 8
+	transition_matrix: null, // To be set based on assigned matrix size
+	sequence: [], // Full sequence for all blocks
+	key_mapping: null, // To be set based on assigned matrix size
+	n_blocks: 7,
+	trials_per_block: null, // 10x matrix size for sufficient learning
+	practice_trials: null, // 2x matrix size for practice
 	rsi: 120, // ms
 	error_feedback_duration: 200,
 	error_tone_duration: 100,
 	correct_feedback_duration: 200,
 	block_break_duration: 15000,
+	start_time: null, // To be set at experiment start
 };
 
 // Matrices are pre-sorted by entropy (Position 0 = lowest, Position N-1 = highest)
@@ -37,16 +42,9 @@ const KEY_MAPPINGS = {
 };
 
 let experimentState = {
-	participantId: "P" + Date.now(),
-	matrixSize: null,
-	transitionMatrix: null,
-	keyMapping: null,
-	sequence: [],
 	currentBlock: 0,
 	currentTrial: 0,
 	trialData: [],
-	blockData: [],
-	startTime: null,
 };
 
 function randomChoice(array, probabilities) {
@@ -78,20 +76,6 @@ function generateSequence(matrix, nTrials) {
 	}
 
 	return sequence;
-}
-
-function calculateConditionalEntropy(transitionProbs) {
-	let entropy = 0;
-	for (let p of transitionProbs) {
-		if (p > 0) {
-			entropy -= p * Math.log2(p);
-		}
-	}
-	return entropy;
-}
-
-function getPositionEntropies(matrix) {
-	return matrix.map((row) => calculateConditionalEntropy(row));
 }
 
 function createStimulusDisplay(
@@ -173,38 +157,49 @@ function playErrorTone() {
 	oscillator.stop(audioContext.currentTime + 0.1);
 }
 
-function initializeExperiment() {
+async function initializeExperiment() {
 	// Randomly assign matrix size
 	const matrixSizes = [4, 5, 6, 7, 8];
-	experimentState.matrixSize = matrixSizes[Math.floor(Math.random() * matrixSizes.length)];
+	const condition = await jsPsychPipe.getCondition(EXPERIMENT_CONFIG.datapipe_id); // 0-4
+	EXPERIMENT_CONFIG.matrix_size = matrixSizes[condition]; // Update config with assigned matrix size
 
 	// Load transition matrix and shuffle it
-	const originalMatrix = MATRICES[experimentState.matrixSize];
-	experimentState.transitionMatrix = shuffleTransitionMatrix(originalMatrix);
-	experimentState.keyMapping = KEY_MAPPINGS[experimentState.matrixSize];
+	const originalMatrix = MATRICES[EXPERIMENT_CONFIG.matrix_size];
+	EXPERIMENT_CONFIG.transition_matrix = shuffleTransitionMatrix(originalMatrix);
+	// Note: key_mapping in config is just for storage, still use KEY_MAPPINGS[size] for access
+	EXPERIMENT_CONFIG.key_mapping = KEY_MAPPINGS[EXPERIMENT_CONFIG.matrix_size];
+
+	// Set trials_per_block and practice_trials based on matrix size
+	EXPERIMENT_CONFIG.trials_per_block = EXPERIMENT_CONFIG.matrix_size * 10; // 10x matrix size for sufficient learning
+	EXPERIMENT_CONFIG.practice_trials = EXPERIMENT_CONFIG.matrix_size * 2; // 2x matrix size for practice
 
 	// Generate full sequence for all blocks
-	const totalTrials = CONFIG.n_blocks * CONFIG.trials_per_block;
-	experimentState.sequence = generateSequence(experimentState.transitionMatrix, totalTrials);
-
-	// Calculate position entropies for data recording
-	experimentState.positionEntropies = getPositionEntropies(experimentState.transitionMatrix);
-
-	experimentState.startTime = Date.now();
+	const totalTrials = EXPERIMENT_CONFIG.n_blocks * EXPERIMENT_CONFIG.trials_per_block;
+	EXPERIMENT_CONFIG.sequence = generateSequence(EXPERIMENT_CONFIG.transition_matrix, totalTrials);
+	EXPERIMENT_CONFIG.start_time = Date.now();
 
 	console.log("Experiment initialized:", {
-		matrixSize: experimentState.matrixSize,
+		matrixSize: EXPERIMENT_CONFIG.matrix_size,
 		totalTrials: totalTrials,
-		entropies: experimentState.positionEntropies,
 	});
 }
 
 const jsPsych = initJsPsych({
 	on_finish: function () {
-		// Add matrix information to all data rows
+		// Add experiment configuration to all data rows
 		jsPsych.data.addProperties({
-			matrix_size: experimentState.matrixSize,
-			transition_matrix: JSON.stringify(experimentState.transitionMatrix),
+			matrix_size: EXPERIMENT_CONFIG.matrix_size,
+			transition_matrix: JSON.stringify(EXPERIMENT_CONFIG.transition_matrix),
+			sequence: JSON.stringify(EXPERIMENT_CONFIG.sequence),
+			key_mapping: JSON.stringify(EXPERIMENT_CONFIG.key_mapping),
+			n_blocks: EXPERIMENT_CONFIG.n_blocks,
+			trials_per_block: EXPERIMENT_CONFIG.trials_per_block,
+			practice_trials: EXPERIMENT_CONFIG.practice_trials,
+			rsi: EXPERIMENT_CONFIG.rsi,
+			error_feedback_duration: EXPERIMENT_CONFIG.error_feedback_duration,
+			correct_feedback_duration: EXPERIMENT_CONFIG.correct_feedback_duration,
+			block_break_duration: EXPERIMENT_CONFIG.block_break_duration,
+			start_time: EXPERIMENT_CONFIG.start_time,
 		});
 		jsPsych.data.displayData("csv");
 	},
@@ -236,14 +231,14 @@ const welcome = {
 const instructions = {
 	type: jsPsychInstructions,
 	pages: function () {
-		const size = experimentState.matrixSize;
+		const size = EXPERIMENT_CONFIG.matrix_size;
 		const keyElements = KEY_MAPPINGS[size]
 			.map((k) => `<span class="inline-key">${k}</span>`)
 			.join(" ");
 
 		return [
 			`<div class="instruction-text">
-                    <h2>Instructions</h2>
+                    <h1>Instructions</h1>
                     <p>In this task, you will see ${size} boxes on the screen.</p>
                     <p>On each trial, a mole <img src="mole.png" class="mole-image" alt="mole" style="vertical-align: middle;"> will appear in one of the boxes.</p>
                     <p>Your job is to press the corresponding key as quickly and accurately as possible.</p>
@@ -278,10 +273,10 @@ const instructions = {
 
 			`<div class="instruction-text">
                     <h2>Practice</h2>
-                    <p>You'll start with ${CONFIG.practice_trials} practice trials to get familiar with the task.</p>
-                    <p>After that, you'll complete ${CONFIG.n_blocks} blocks of trials.</p>
+                    <p>You'll start with ${EXPERIMENT_CONFIG.practice_trials} practice trials to get familiar with the task.</p>
+                    <p>After that, you'll complete ${EXPERIMENT_CONFIG.n_blocks} blocks of trials.</p>
                     <p>Between blocks, you'll get a 15-second break to rest.</p>
-                    <p>The entire task takes about 25 minutes.</p>
+                    <p>The entire task takes about 7 minutes.</p>
                     <p><strong>Ready to practice?</strong></p>
                 </div>`,
 		];
@@ -291,7 +286,7 @@ const instructions = {
 
 // Practice trials
 function createPracticeTrial(position, trialIndex) {
-	const size = experimentState.matrixSize;
+	const size = EXPERIMENT_CONFIG.matrix_size;
 	const correctKey = KEY_MAPPINGS[size][position];
 
 	// Correction loop - repeats until correct response
@@ -309,7 +304,6 @@ function createPracticeTrial(position, trialIndex) {
 					trial_index: trialIndex,
 					position: position,
 					correct_key: correctKey,
-					entropy: experimentState.positionEntropies[position],
 				},
 				on_load: function () {
 					setupKeyPressHandlers(size);
@@ -335,8 +329,8 @@ function createPracticeTrial(position, trialIndex) {
 				trial_duration: function () {
 					const lastTrial = jsPsych.data.get().last(1).values()[0];
 					return lastTrial.correct
-						? CONFIG.correct_feedback_duration
-						: CONFIG.error_feedback_duration;
+						? EXPERIMENT_CONFIG.correct_feedback_duration
+						: EXPERIMENT_CONFIG.error_feedback_duration;
 				},
 				on_start: function () {
 					const lastTrial = jsPsych.data.get().last(1).values()[0];
@@ -359,7 +353,7 @@ function createPracticeTrial(position, trialIndex) {
 			return createStimulusDisplay(null, size, true);
 		},
 		choices: "NO_KEYS",
-		trial_duration: CONFIG.rsi,
+		trial_duration: EXPERIMENT_CONFIG.rsi,
 	};
 
 	return {
@@ -369,7 +363,7 @@ function createPracticeTrial(position, trialIndex) {
 
 // Main task trial with feedback
 function createMainTrial(position, blockNum, trialInBlock, overallTrial) {
-	const size = experimentState.matrixSize;
+	const size = EXPERIMENT_CONFIG.matrix_size;
 	const correctKey = KEY_MAPPINGS[size][position];
 
 	// Track whether an error has occurred
@@ -393,7 +387,6 @@ function createMainTrial(position, blockNum, trialInBlock, overallTrial) {
 					overall_trial: overallTrial,
 					position: position,
 					correct_key: correctKey,
-					entropy: experimentState.positionEntropies[position],
 					matrix_size: size,
 				},
 				on_load: function () {
@@ -414,7 +407,6 @@ function createMainTrial(position, blockNum, trialInBlock, overallTrial) {
 							response: data.response,
 							rt: data.rt,
 							correct: data.correct,
-							entropy: data.entropy,
 						});
 					}
 				},
@@ -439,8 +431,8 @@ function createMainTrial(position, blockNum, trialInBlock, overallTrial) {
 				trial_duration: function () {
 					const lastTrial = jsPsych.data.get().last(1).values()[0];
 					return lastTrial.correct
-						? CONFIG.correct_feedback_duration
-						: CONFIG.error_feedback_duration;
+						? EXPERIMENT_CONFIG.correct_feedback_duration
+						: EXPERIMENT_CONFIG.error_feedback_duration;
 				},
 				on_start: function () {
 					const lastTrial = jsPsych.data.get().last(1).values()[0];
@@ -463,7 +455,7 @@ function createMainTrial(position, blockNum, trialInBlock, overallTrial) {
 			return createStimulusDisplay(null, size, false);
 		},
 		choices: "NO_KEYS",
-		trial_duration: CONFIG.rsi,
+		trial_duration: EXPERIMENT_CONFIG.rsi,
 	};
 
 	return {
@@ -516,11 +508,11 @@ function createBlockBreak(blockNum) {
 				feedback = '<p style="color: #4CAF50;"><strong>Great job! Keep it up!</strong></p>';
 			}
 
-			const progress = ((blockNum / CONFIG.n_blocks) * 100).toFixed(0);
+			const progress = ((blockNum / EXPERIMENT_CONFIG.n_blocks) * 100).toFixed(0);
 
 			return `
                     <div class="block-feedback">
-                        <h2>Block ${blockNum} of ${CONFIG.n_blocks} Complete!</h2>
+                        <h2>Block ${blockNum} of ${EXPERIMENT_CONFIG.n_blocks} Complete!</h2>
                         
                         <div class="progress-bar-container">
                             <div class="progress-bar" style="width: ${progress}%"></div>
@@ -539,7 +531,7 @@ function createBlockBreak(blockNum) {
                 `;
 		},
 		choices: "NO_KEYS",
-		trial_duration: CONFIG.block_break_duration,
+		trial_duration: EXPERIMENT_CONFIG.block_break_duration,
 	};
 }
 
@@ -650,31 +642,47 @@ const debrief = {
 	show_clickable_nav: true,
 };
 
-// Initialize experiment
-initializeExperiment();
+// Data saving
+const save_data = (filename) => ({
+	type: jsPsychPipe,
+	action: "save",
+	experiment_id: "Sz1Mxzs1KPOg",
+	filename: filename,
+	data_string: () => jsPsych.data.get().csv(),
+});
 
-// Add components to timeline
-timeline.push(welcome);
-timeline.push(instructions);
+// Run experiment (async wrapper to handle initialization)
+async function runExperiment() {
+	// Initialize experiment (this is async because it calls jsPsychPipe.getCondition)
+	await initializeExperiment();
+	const subject_id = jsPsych.randomization.randomID(10);
+	const filename = `${subject_id}.csv`;
 
-// Practice block
-const practiceSequence = generateSequence(experimentState.transitionMatrix, CONFIG.practice_trials);
+	// Add components to timeline
+	timeline.push(welcome);
+	timeline.push(instructions);
 
-for (let i = 0; i < CONFIG.practice_trials; i++) {
-	timeline.push(createPracticeTrial(practiceSequence[i], i));
-}
+	// Practice block
+	const practiceSequence = generateSequence(
+		EXPERIMENT_CONFIG.transition_matrix,
+		EXPERIMENT_CONFIG.practice_trials,
+	);
 
-// Practice feedback
-timeline.push({
-	type: jsPsychHtmlButtonResponse,
-	stimulus: function () {
-		const practiceData = jsPsych.data.get().filter({phase: "practice"});
-		const accuracy = (
-			(practiceData.filter({correct: true}).count() / practiceData.count()) *
-			100
-		).toFixed(1);
+	for (let i = 0; i < EXPERIMENT_CONFIG.practice_trials; i++) {
+		timeline.push(createPracticeTrial(practiceSequence[i], i));
+	}
 
-		return `
+	// Practice feedback
+	timeline.push({
+		type: jsPsychHtmlButtonResponse,
+		stimulus: function () {
+			const practiceData = jsPsych.data.get().filter({phase: "practice"});
+			const accuracy = (
+				(practiceData.filter({correct: true}).count() / practiceData.count()) *
+				100
+			).toFixed(1);
+
+			return `
                 <div class="instruction-text">
                     <h2>Practice Complete!</h2>
                     <p>Your accuracy: ${accuracy}%</p>
@@ -682,34 +690,42 @@ timeline.push({
                     <p>The main task will now begin.</p>
                 </div>
             `;
-	},
-	choices: ["Start Main Task"],
-});
+		},
+		choices: ["Start Main Task"],
+	});
 
-// Main task blocks
-for (let block = 0; block < CONFIG.n_blocks; block++) {
-	for (let trial = 0; trial < CONFIG.trials_per_block; trial++) {
-		const overallTrial = block * CONFIG.trials_per_block + trial;
-		const position = experimentState.sequence[overallTrial];
+	// Main task blocks
+	for (let block = 0; block < EXPERIMENT_CONFIG.n_blocks; block++) {
+		for (let trial = 0; trial < EXPERIMENT_CONFIG.trials_per_block; trial++) {
+			const overallTrial = block * EXPERIMENT_CONFIG.trials_per_block + trial;
+			const position = EXPERIMENT_CONFIG.sequence[overallTrial];
 
-		timeline.push(createMainTrial(position, block, trial, overallTrial));
+			timeline.push(createMainTrial(position, block, trial, overallTrial));
+		}
+
+		// Block break (except after last block)
+		if (block < EXPERIMENT_CONFIG.n_blocks - 1) {
+			timeline.push(createBlockBreak(block + 1));
+		}
 	}
 
-	// Block break (except after last block)
-	if (block < CONFIG.n_blocks - 1) {
-		timeline.push(createBlockBreak(block + 1));
-	}
+	// Post-task questionnaire
+	timeline.push(questionnaire);
+	timeline.push(awareness_questions);
+	timeline.push(pattern_question);
+	timeline.push(pattern_description);
+	timeline.push(strategy_question);
+	timeline.push(forced_pattern_question);
+
+	// Debrief
+	timeline.push(debrief);
+
+	// Data saving
+	timeline.push(save_data(filename));
+
+	// Run the experiment
+	jsPsych.run(timeline);
 }
 
-// Post-task questionnaire
-timeline.push(questionnaire);
-timeline.push(awareness_questions);
-timeline.push(pattern_question);
-timeline.push(pattern_description);
-timeline.push(strategy_question);
-timeline.push(forced_pattern_question);
-
-// Debrief
-timeline.push(debrief);
-
-jsPsych.run(timeline);
+// Start the experiment
+runExperiment();

@@ -82,9 +82,13 @@
 .instruction-text {
 	font-size: 18px;
 	line-height: 1.6;
-	margin: 20px auto;
-	max-width: 800px;
+	margin: 60px auto 0 auto;
+	padding: 40px 20px;
+	width: 800px;
+	max-width: 90vw;
 	text-align: left;
+	min-height: 500px;
+	box-sizing: border-box;
 }
 
 .key-mapping {
