@@ -174,13 +174,16 @@ async function initializeExperiment() {
 	EXPERIMENT_CONFIG.practice_trials = EXPERIMENT_CONFIG.matrix_size * 2; // 2x matrix size for practice
 
 	// Generate full sequence for all blocks
-	const totalTrials = EXPERIMENT_CONFIG.n_blocks * EXPERIMENT_CONFIG.trials_per_block;
-	EXPERIMENT_CONFIG.sequence = generateSequence(EXPERIMENT_CONFIG.transition_matrix, totalTrials);
+	EXPERIMENT_CONFIG.total_trials = EXPERIMENT_CONFIG.n_blocks * EXPERIMENT_CONFIG.trials_per_block;
+	EXPERIMENT_CONFIG.sequence = generateSequence(
+		EXPERIMENT_CONFIG.transition_matrix,
+		EXPERIMENT_CONFIG.total_trials,
+	);
 	EXPERIMENT_CONFIG.start_time = Date.now();
 
 	console.log("Experiment initialized:", {
 		matrixSize: EXPERIMENT_CONFIG.matrix_size,
-		totalTrials: totalTrials,
+		totalTrials: EXPERIMENT_CONFIG.total_trials,
 	});
 }
 
@@ -194,6 +197,7 @@ const jsPsych = initJsPsych({
 			key_mapping: JSON.stringify(EXPERIMENT_CONFIG.key_mapping),
 			n_blocks: EXPERIMENT_CONFIG.n_blocks,
 			trials_per_block: EXPERIMENT_CONFIG.trials_per_block,
+			total_trials: EXPERIMENT_CONFIG.total_trials,
 			practice_trials: EXPERIMENT_CONFIG.practice_trials,
 			rsi: EXPERIMENT_CONFIG.rsi,
 			error_feedback_duration: EXPERIMENT_CONFIG.error_feedback_duration,
@@ -209,11 +213,12 @@ let timeline = [];
 
 const welcome = {
 	type: jsPsychInstructions,
-	pages: [
-		`<div class="instruction-text">
+	pages: function () {
+		return [
+			`<div class="instruction-text">
                 <h1>Welcome!</h1>
                 <p>Thank you for participating in this study.</p>
-                <p>This experiment will take approximately 10 minutes to complete.</p>
+                <p>This experiment will take approximately ${Math.ceil(EXPERIMENT_CONFIG.total_trials / 60)} minutes to complete.</p>
                 <p>Please make sure you:</p>
                 <ul>
                     <li>Are in a quiet environment</li>
@@ -223,7 +228,8 @@ const welcome = {
                 </ul>
                 <p>Click 'Next' to continue.</p>
             </div>`,
-	],
+		];
+	},
 	show_clickable_nav: true,
 };
 
