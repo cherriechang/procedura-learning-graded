@@ -212,11 +212,17 @@ const jsPsych = initJsPsych({
 
 let timeline = [];
 
-const welcome = {
+// Instructions
+const instructions = {
 	type: jsPsychInstructions,
 	pages: function () {
+		const size = EXPERIMENT_CONFIG.matrix_size;
+		const keyElements = KEY_MAPPINGS[size]
+			.map((k) => `<span class="inline-key">${k}</span>`)
+			.join(" ");
+
 		return [
-			`<div class="instruction-text">
+						`<div class="instruction-text">
                 <h1>Welcome!</h1>
                 <p>Thank you for participating in this study.</p>
                 <p>Please make sure you:</p>
@@ -228,21 +234,7 @@ const welcome = {
                 </ul>
                 <p><strong>Click 'Next' to continue.</strong></p>
             </div>`,
-		];
-	},
-	show_clickable_nav: true,
-};
 
-// Instructions
-const instructions = {
-	type: jsPsychInstructions,
-	pages: function () {
-		const size = EXPERIMENT_CONFIG.matrix_size;
-		const keyElements = KEY_MAPPINGS[size]
-			.map((k) => `<span class="inline-key">${k}</span>`)
-			.join(" ");
-
-		return [
 			`<div class="instruction-text">
                     <h1>Instructions</h1>
                     <p>In this task, you will see ${size} boxes on the screen.</p>
@@ -703,7 +695,6 @@ async function runExperiment() {
 	const filename = `${subject_id}.csv`;
 
 	// Add components to timeline
-	timeline.push(welcome);
 	timeline.push(instructions);
 
 	// Practice block - ensure all positions are sampled exactly twice
