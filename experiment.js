@@ -740,7 +740,7 @@ async function runExperiment() {
                     <p>Remember: Respond as quickly and accurately as possible.</p>
 					<p>Now, you will complete ${EXPERIMENT_CONFIG.n_blocks} blocks of ${EXPERIMENT_CONFIG.trials_per_block} trials.</p>
                     <p>Between blocks, you'll get a 15-second break to rest.</p>
-                    <p>The entire task takes about ${Math.ceil((EXPERIMENT_CONFIG.n_blocks * EXPERIMENT_CONFIG.trials_per_block * EXPERIMENT_CONFIG.estimated_trial_duration) / 60000)} minutes.</p>
+                    <p>The entire task takes about ${Math.ceil((EXPERIMENT_CONFIG.n_blocks * EXPERIMENT_CONFIG.trials_per_block * (EXPERIMENT_CONFIG.estimated_trial_duration + EXPERIMENT_CONFIG.rsi) + EXPERIMENT_CONFIG.n_blocks * 15000) / 60000)} minutes.</p>
                     <p><strong>The main task will now begin.</strong></p>
                 </div>
             `;
