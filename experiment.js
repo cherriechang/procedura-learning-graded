@@ -6,7 +6,7 @@ const EXPERIMENT_CONFIG = {
 	transition_matrix: null, // To be set based on assigned matrix size
 	sequence: [], // Full sequence for all blocks
 	key_mapping: null, // To be set based on assigned matrix size
-	n_blocks: 7,
+	n_blocks: 0,
 	trials_per_block: null, // 10x matrix size for sufficient learning
 	practice_trials: null, // 2x matrix size for practice
 	rsi: 120, // ms
@@ -280,7 +280,7 @@ const instructions = {
 			`<div class="instruction-text">
                     <h2>Practice</h2>
                     <p>You'll start with ${EXPERIMENT_CONFIG.practice_trials} practice trials to get familiar with the task.</p>
-                    <p>After that, you'll complete ${EXPERIMENT_CONFIG.n_blocks} blocks of trials.</p>
+                    <p>After that, you'll complete ${EXPERIMENT_CONFIG.n_blocks} blocks of ${EXPERIMENT_CONFIG.trials_per_block} trials.</p>
                     <p>Between blocks, you'll get a 15-second break to rest.</p>
                     <p>The entire task takes about 7 minutes.</p>
                     <p><strong>Ready to practice?</strong></p>
@@ -542,92 +542,133 @@ function createBlockBreak(blockNum) {
 }
 
 // Post-task questionnaire
-const questionnaire = {
-	type: jsPsychSurveyMultiChoice,
-	questions: [
-		{
-			prompt: "Did you notice anything special about the task?",
-			name: "noticed_special",
-			options: ["No", "Yes"],
-			required: true,
-		},
-	],
-};
 
-const awareness_questions = {
-	timeline: [
-		{
-			type: jsPsychSurveyText,
-			questions: [
-				{
-					prompt: "What did you notice? Please describe in detail.",
-					name: "what_noticed",
-					rows: 4,
-					required: true,
-				},
-			],
-		},
-	],
-	conditional_function: function () {
-		const lastResponse = jsPsych.data.get().last(1).values()[0];
-		return lastResponse.response.noticed_special === "Yes";
-	},
-};
-
-const pattern_question = {
-	type: jsPsychSurveyMultiChoice,
-	questions: [
-		{
-			prompt: "Did you notice any regularity or pattern in which positions the mole appeared?",
-			name: "noticed_pattern",
-			options: ["No", "Yes"],
-			required: true,
-		},
-	],
-};
-
-const pattern_description = {
-	timeline: [
-		{
-			type: jsPsychSurveyText,
-			questions: [
-				{
-					prompt: "Can you describe the pattern?",
-					name: "pattern_description",
-					rows: 4,
-					required: true,
-				},
-			],
-		},
-	],
-	conditional_function: function () {
-		const lastResponse = jsPsych.data.get().last(1).values()[0];
-		return lastResponse.response.noticed_pattern === "Yes";
-	},
-};
-
-const strategy_question = {
+// Q1: Open probe
+const q1_open_probe = {
 	type: jsPsychSurveyText,
 	questions: [
 		{
-			prompt: "Did you use any strategy to help you respond faster? If so, please describe.",
-			name: "strategy",
+			prompt: "Did you notice anything special about the task?",
+			name: "q1_open_probe",
 			rows: 4,
 			required: false,
 		},
 	],
+	data: {
+		questionnaire_item: "q1_open_probe",
+	},
 };
 
-const forced_pattern_question = {
+// Q2: Direct pattern question
+const q2_noticed_regularity = {
+	type: jsPsychSurveyMultiChoice,
+	questions: [
+		{
+			prompt: "Did you notice any regularity in where the mole appeared?",
+			name: "q2_noticed_regularity",
+			options: ["No", "Yes"],
+			required: true,
+		},
+	],
+	data: {
+		questionnaire_item: "q2_noticed_regularity",
+	},
+};
+
+// Q2b: If yes, describe the regularity
+const q2b_describe_regularity = {
+	timeline: [
+		{
+			type: jsPsychSurveyText,
+			questions: [
+				{
+					prompt: "Can you describe the regularity?",
+					name: "q2b_describe_regularity",
+					rows: 4,
+					required: true,
+				},
+			],
+			data: {
+				questionnaire_item: "q2b_describe_regularity",
+			},
+		},
+	],
+	conditional_function: function () {
+		const lastResponse = jsPsych.data.get().last(1).values()[0];
+		return lastResponse.response.q2_noticed_regularity === "Yes";
+	},
+};
+
+// Q2c: Confidence (THIS IS KEY)
+const q2c_confidence = {
+	timeline: [
+		{
+			type: jsPsychSurveyLikert,
+			questions: [
+				{
+					prompt: "How confident are you that there was a regularity?",
+					name: "q2c_confidence",
+					labels: ["1<br>Not at all", "2", "3", "4", "5<br>Very confident"],
+					required: true,
+				},
+			],
+			data: {
+				questionnaire_item: "q2c_confidence",
+			},
+		},
+	],
+	conditional_function: function () {
+		const lastResponse = jsPsych.data.get().last(1).values()[0];
+		return lastResponse.response.q2_noticed_regularity === "Yes";
+	},
+};
+
+// Q3: Strategy
+const q3_strategy = {
+	type: jsPsychSurveyText,
+	questions: [
+		{
+			prompt: "Did you use any strategy to help you respond faster?",
+			name: "q3_strategy",
+			rows: 4,
+			required: false,
+		},
+	],
+	data: {
+		questionnaire_item: "q3_strategy",
+	},
+};
+
+// Q4: Forced description
+const q4_forced_description = {
 	type: jsPsychSurveyText,
 	questions: [
 		{
 			prompt: "There WAS a regularity in the sequence. What do you think it was?",
-			name: "forced_pattern",
+			name: "q4_forced_description",
 			rows: 4,
 			required: true,
 		},
 	],
+	data: {
+		questionnaire_item: "q4_forced_description",
+	},
+};
+
+// Q4b: Confidence in guess
+const q4b_confidence_guess = {
+	type: jsPsychSurveyLikert,
+	questions: [
+		{
+			prompt: "How confident are you in your answer?",
+			name: "q4b_confidence_guess",
+			labels: ["1<br>Not at all", "2", "3", "4", "5<br>Very confident"],
+			required: true,
+		},
+	],
+	data: {
+		questionnaire_item: "q4b_confidence_guess",
+	},
 };
 
 // Debrief
@@ -716,12 +757,13 @@ async function runExperiment() {
 	}
 
 	// Post-task questionnaire
-	timeline.push(questionnaire);
-	timeline.push(awareness_questions);
-	timeline.push(pattern_question);
-	timeline.push(pattern_description);
-	timeline.push(strategy_question);
-	timeline.push(forced_pattern_question);
+	timeline.push(q1_open_probe);
+	timeline.push(q2_noticed_regularity);
+	timeline.push(q2b_describe_regularity);
+	timeline.push(q2c_confidence);
+	timeline.push(q3_strategy);
+	timeline.push(q4_forced_description);
+	timeline.push(q4b_confidence_guess);
 
 	// Debrief
 	timeline.push(debrief);
