@@ -481,8 +481,6 @@ function createBlockBreak(blockNum) {
                         <p><strong>Current Block:</strong></p>
                         <p>You got ${accuracy}% of the trials correct.</p>
 
-                        ${previousStats}
-
                         ${feedback}
 
                         <p style="margin-top: 30px;">Feel free to take a break.</p>
@@ -531,8 +529,6 @@ function createFinalFeedback() {
 
                         <p><strong>Final Block:</strong></p>
                         <p>You got ${accuracy}% of the trials correct.</p>
-
-                        ${previousStats}
 
                         ${feedback}
 
