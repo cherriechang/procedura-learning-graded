@@ -458,25 +458,6 @@ function createBlockBreak(blockNum) {
 				blockTrials.filter((t) => t.correct).length
 			).toFixed(0);
 
-			// Get previous block stats if available
-			let previousStats = "";
-			if (blockNum > 1) {
-				const prevBlockTrials = experimentState.trialData.filter((t) => t.block === blockNum - 2);
-				const prevAccuracy = (
-					(prevBlockTrials.filter((t) => t.correct).length / prevBlockTrials.length) *
-					100
-				).toFixed(1);
-				const prevMeanRT = (
-					prevBlockTrials.filter((t) => t.correct).reduce((sum, t) => sum + t.rt, 0) /
-					prevBlockTrials.filter((t) => t.correct).length
-				).toFixed(0);
-
-				previousStats = `
-                        <p><strong>Previous Block:</strong></p>
-                        <p>You got ${prevAccuracy}% of the trials correct.</p>
-                    `;
-			}
-
 			// Adaptive feedback
 			let feedback = "";
 			if (accuracy < 50) {
@@ -529,25 +510,6 @@ function createFinalFeedback() {
 				blockTrials.filter((t) => t.correct).reduce((sum, t) => sum + t.rt, 0) /
 				blockTrials.filter((t) => t.correct).length
 			).toFixed(0);
-
-			// Get previous block stats
-			let previousStats = "";
-			if (finalBlock > 0) {
-				const prevBlockTrials = experimentState.trialData.filter((t) => t.block === finalBlock - 1);
-				const prevAccuracy = (
-					(prevBlockTrials.filter((t) => t.correct).length / prevBlockTrials.length) *
-					100
-				).toFixed(1);
-				const prevMeanRT = (
-					prevBlockTrials.filter((t) => t.correct).reduce((sum, t) => sum + t.rt, 0) /
-					prevBlockTrials.filter((t) => t.correct).length
-				).toFixed(0);
-
-				previousStats = `
-                        <p><strong>Previous Block:</strong></p>
-                        <p>You got ${prevAccuracy}% of the trials correct.</p>
-                    `;
-			}
 
 			// Adaptive feedback
 			let feedback = "";
