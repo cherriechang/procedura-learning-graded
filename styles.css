@@ -16,7 +16,7 @@
 }
 
 .position-wrapper.hand-gap {
-	margin-right: 60px; /* Triple the normal margin (30px * 3) */
+	margin-right: 30px; /* Double the normal margin (30px * 2) */
 }
 
 .key-label {
