@@ -233,7 +233,7 @@ const jsPsych = initJsPsych({
 			block_break_duration: EXPERIMENT_CONFIG.block_break_duration,
 			start_time: EXPERIMENT_CONFIG.start_time,
 		});
-		jsPsych.data.displayData("csv");
+		// Data is already saved via DataPipe, no need to display it
 	},
 });
 
