@@ -13,7 +13,8 @@ const EXPERIMENT_CONFIG = {
 	error_feedback_duration: 200,
 	error_tone_duration: 100,
 	correct_feedback_duration: 200,
-	block_break_duration: 15000,
+	accuracy_threshold: 0.65, // for adaptive feedback
+	rt_threshold: 1000, // for adaptive feedback
 	estimated_trial_duration: 500, // ms (for estimating total experiment time)
 	start_time: null, // To be set at experiment start
 };
@@ -490,12 +491,12 @@ function createBlockBreak(blockNum) {
 	return {
 		type: jsPsychHtmlButtonResponse,
 		stimulus: function () {
-			// Calculate block statistics
-			const blockTrials = experimentState.trialData.filter((t) => t.block === blockNum - 1);
-			const accuracy = (
-				(blockTrials.filter((t) => t.correct).length / blockTrials.length) *
-				100
-			).toFixed(1);
+			// Calculate block statistics - only use main_stimulus trials
+			const allData = jsPsych.data.get().filter({phase: "main_stimulus", block: blockNum - 1});
+			const blockTrials = allData.values();
+			const correctCount = blockTrials.filter((t) => t.correct).length;
+			const totalCount = blockTrials.length;
+			const accuracy = (correctCount / totalCount) * 100;
 			const meanRT = (
 				blockTrials.filter((t) => t.correct).reduce((sum, t) => sum + t.rt, 0) /
 				blockTrials.filter((t) => t.correct).length
@@ -503,9 +504,9 @@ function createBlockBreak(blockNum) {
 
 			// Adaptive feedback
 			let feedback = "";
-			if (accuracy < 50) {
+			if (accuracy < EXPERIMENT_CONFIG.accuracy_threshold * 100) {
 				feedback = '<p style="color: #f44336;"><strong>Try to be more accurate.</strong></p>';
-			} else if (meanRT > 1000) {
+			} else if (meanRT > EXPERIMENT_CONFIG.rt_threshold) {
 				feedback = '<p style="color: #2196F3;"><strong>Try to respond faster!</strong></p>';
 			} else {
 				feedback = '<p style="color: #4CAF50;"><strong>Great job! Keep it up!</strong></p>';
@@ -522,7 +523,7 @@ function createBlockBreak(blockNum) {
                         </div>
 
                         <p><strong>Current Block:</strong></p>
-                        <p>You got ${accuracy}% of the trials correct.</p>
+                        <p>You got ${blockTrials.filter((t) => t.correct).length} out of ${blockTrials.length} trials correct.</p>
 
                         ${feedback}
 
@@ -546,28 +547,12 @@ function createFinalFeedback() {
 			// Record end time when last block completes
 			EXPERIMENT_CONFIG.end_time = Date.now();
 
-			// Calculate final block statistics
+			// Calculate final block statistics - only use main_stimulus trials
 			const finalBlock = EXPERIMENT_CONFIG.n_blocks - 1;
-			const blockTrials = experimentState.trialData.filter((t) => t.block === finalBlock);
-			const accuracy = (
-				(blockTrials.filter((t) => t.correct).length / blockTrials.length) *
-				100
-			).toFixed(1);
-			const meanRT = (
-				blockTrials.filter((t) => t.correct).reduce((sum, t) => sum + t.rt, 0) /
-				blockTrials.filter((t) => t.correct).length
-			).toFixed(0);
-
-			// Adaptive feedback
-			let feedback = "";
-			if (accuracy < 85) {
-				feedback = '<p style="color: #f44336;"><strong>Try to be more accurate.</strong></p>';
-			} else if (meanRT > 1000) {
-				feedback = '<p style="color: #2196F3;"><strong>Try to respond faster!</strong></p>';
-			} else {
-				feedback = '<p style="color: #4CAF50;"><strong>Great job! Keep it up!</strong></p>';
-			}
-
+			const allData = jsPsych.data.get().filter({phase: "main_stimulus", block: finalBlock});
+			const blockTrials = allData.values();
+			const correctCount = blockTrials.filter((t) => t.correct).length;
+			const totalCount = blockTrials.length;
 			return `
                     <div class="block-feedback">
                         <h2>All Blocks Complete!</h2>
@@ -577,9 +562,7 @@ function createFinalFeedback() {
                         </div>
 
                         <p><strong>Final Block:</strong></p>
-                        <p>You got ${accuracy}% of the trials correct.</p>
-
-                        ${feedback}
+                        <p>You got ${correctCount} out of ${totalCount} trials correct.</p>
 
                         <p style="margin-top: 30px;">Thank you for completing all the trials!</p>
                         <p style="font-size: 14px; color: #666;">Click continue to proceed to a few final questions.</p>
@@ -879,18 +862,25 @@ async function runExperiment() {
 	timeline.push(enter_fullscreen);
 	timeline.push(instructions);
 
-	// Practice block - ensure all positions are sampled exactly twice
+	// Practice block - sample without replacement, ensuring all positions are practiced
 	let practiceSequence = [];
 	const nPositions = EXPERIMENT_CONFIG.matrix_size;
+	const nPracticeTrials = EXPERIMENT_CONFIG.practice_trials;
 
-	// Create array with each position appearing exactly twice
-	for (let pos = 0; pos < nPositions; pos++) {
-		practiceSequence.push(pos);
-		practiceSequence.push(pos);
+	// Sample without replacement - cycle through all positions, reset when exhausted
+	while (practiceSequence.length < nPracticeTrials) {
+		// Create array with all positions
+		let positions = [];
+		for (let pos = 0; pos < nPositions; pos++) {
+			positions.push(pos);
+		}
+		// Shuffle and add to sequence
+		positions = jsPsych.randomization.shuffle(positions);
+		practiceSequence.push(...positions);
 	}
 
-	// Shuffle the practice sequence
-	practiceSequence = jsPsych.randomization.shuffle(practiceSequence);
+	// Trim to exact number of practice trials
+	practiceSequence = practiceSequence.slice(0, nPracticeTrials);
 
 	for (let i = 0; i < EXPERIMENT_CONFIG.practice_trials; i++) {
 		timeline.push(createPracticeTrial(practiceSequence[i], i));
@@ -900,19 +890,17 @@ async function runExperiment() {
 	timeline.push({
 		type: jsPsychHtmlButtonResponse,
 		stimulus: function () {
-			const practiceData = jsPsych.data.get().filter({phase: "practice"});
-			const accuracy = (
-				(practiceData.filter({correct: true}).count() / practiceData.count()) *
-				100
-			).toFixed(1);
+			const practiceData = jsPsych.data.get().filter({phase: "practice_stimulus"});
+			const correctCount = practiceData.filter({correct: true}).count();
+			const totalCount = practiceData.count();
 
 			return `
                 <div class="instruction-text">
                     <h2>Practice Complete!</h2>
-                    <p>You got ${accuracy}% of the trials correct.</p>
+                    <p>You got ${correctCount} out of ${totalCount} trials correct.</p>
                     <p>Remember: Respond as quickly and accurately as possible.</p>
 					<p>Now, you will complete ${EXPERIMENT_CONFIG.n_blocks} blocks of ${EXPERIMENT_CONFIG.trials_per_block} trials.</p>
-                    <p>Between blocks, you will get a 15-second break to rest.</p>
+                    <p>Between blocks, you will get a break to rest.</p>
                     <p>The entire task takes about ${Math.ceil((EXPERIMENT_CONFIG.n_blocks * EXPERIMENT_CONFIG.trials_per_block * (EXPERIMENT_CONFIG.estimated_trial_duration + EXPERIMENT_CONFIG.rsi) + EXPERIMENT_CONFIG.n_blocks * 15000) / 60000)} minutes.</p>
                     <p><strong>The main task will now begin.</strong></p>
                 </div>
