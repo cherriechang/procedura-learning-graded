@@ -713,7 +713,8 @@ const q5_technical = {
 	type: jsPsychSurveyText,
 	questions: [
 		{
-			prompt: "Did you experience any technical difficulties, bugs, or issues during this experiment? If so, please describe them below. (This is a pilot testing phase, so your feedback is very helpful!)",
+			prompt:
+				"Did you experience any technical difficulties, bugs, or issues during this experiment? If so, please describe them below. (This is a pilot testing phase, so your feedback is very helpful!)",
 			name: "technical_difficulties",
 			rows: 5,
 			required: false,
@@ -726,9 +727,8 @@ const q5_technical = {
 
 // Debrief
 const debrief = {
-	type: jsPsychInstructions,
-	pages: [
-		`<div class="instruction-text">
+	type: jsPsychHtmlButtonResponse,
+	stimulus: `<div class="instruction-text">
                 <h2>Thank You!</h2>
                 <p>You have completed the experiment.</p>
                 <p>This study investigates how people learn predictable patterns in sequences.</p>
@@ -736,10 +736,11 @@ const debrief = {
                 while others were more variable.</p>
                 <p>Your data will help us understand how people learn these kinds of patterns.</p>
                 <p>Thank you for your participation!</p>
-                <p>You may close this window now.</p>
             </div>`,
-	],
-	show_clickable_nav: true,
+	choices: ["Close Window"],
+	on_finish: function () {
+		window.close();
+	},
 };
 
 // Data saving
@@ -757,6 +758,11 @@ async function runExperiment() {
 	await initializeExperiment();
 	const subject_id = jsPsych.randomization.randomID(10);
 	const filename = `${subject_id}.csv`;
+
+	// Add subject_id to all data rows
+	jsPsych.data.addProperties({
+		subject_id: subject_id,
+	});
 
 	// Preload media files
 	const size = EXPERIMENT_CONFIG.matrix_size;
