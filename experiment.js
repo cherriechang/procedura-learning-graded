@@ -6,7 +6,7 @@ const EXPERIMENT_CONFIG = {
 	transition_matrix: null, // To be set based on assigned matrix size
 	sequence: [], // Full sequence for all blocks
 	key_mapping: null, // To be set based on assigned matrix size
-	n_blocks: 7,
+	n_blocks: 3,
 	trials_per_block: null, // 10x matrix size for sufficient learning
 	practice_trials: null, // 2x matrix size for practice
 	rsi: 120, // ms
