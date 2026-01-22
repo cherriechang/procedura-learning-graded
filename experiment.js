@@ -16,7 +16,6 @@ const EXPERIMENT_CONFIG = {
 	accuracy_threshold: 0.65, // for adaptive feedback
 	rt_threshold: 1000, // for adaptive feedback
 	estimated_trial_duration: 500, // ms (for estimating total experiment time)
-	start_time: null, // To be set at experiment start
 };
 
 // Matrices are pre-sorted by entropy (Position 0 = lowest, Position N-1 = highest)
@@ -211,7 +210,6 @@ async function initializeExperiment() {
 		EXPERIMENT_CONFIG.transition_matrix,
 		EXPERIMENT_CONFIG.total_trials,
 	);
-	EXPERIMENT_CONFIG.start_time = Date.now();
 
 	console.log("Experiment initialized:", {
 		matrixSize: EXPERIMENT_CONFIG.matrix_size,
@@ -567,8 +565,6 @@ function createFinalFeedback() {
 	return {
 		type: jsPsychHtmlButtonResponse,
 		stimulus: function () {
-			// Record end time when last block completes
-			EXPERIMENT_CONFIG.end_time = Date.now();
 
 			// Calculate final block statistics - only use main_stimulus trials
 			const finalBlock = EXPERIMENT_CONFIG.n_blocks - 1;
@@ -598,12 +594,6 @@ function createFinalFeedback() {
 		data: {
 			phase: "main",
 			experiment_trial_type: "final_feedback",
-		},
-		on_finish: function () {
-			// Add end_time to all data rows
-			jsPsych.data.addProperties({
-				end_time: EXPERIMENT_CONFIG.end_time,
-			});
 		},
 	};
 }
@@ -873,7 +863,6 @@ async function runExperiment() {
 		trials_per_block: EXPERIMENT_CONFIG.trials_per_block,
 		total_trials: EXPERIMENT_CONFIG.total_trials,
 		practice_trials: EXPERIMENT_CONFIG.practice_trials,
-		start_time: EXPERIMENT_CONFIG.start_time,
 	});
 
 	// Preload media files
@@ -942,7 +931,7 @@ async function runExperiment() {
                     <p>Remember: Respond as quickly and accurately as possible.</p>
 					<p>Now, you will complete ${EXPERIMENT_CONFIG.n_blocks} blocks of ${EXPERIMENT_CONFIG.trials_per_block} trials.</p>
                     <p>Between blocks, you will get a break to rest.</p>
-                    <p>The entire task takes about ${Math.ceil((EXPERIMENT_CONFIG.n_blocks * EXPERIMENT_CONFIG.trials_per_block * (EXPERIMENT_CONFIG.estimated_trial_duration + EXPERIMENT_CONFIG.rsi) + EXPERIMENT_CONFIG.n_blocks * 15000) / 60000)} minutes.</p>
+                    <p>The entire task takes about ${Math.ceil((EXPERIMENT_CONFIG.n_blocks * EXPERIMENT_CONFIG.trials_per_block * (EXPERIMENT_CONFIG.estimated_trial_duration + EXPERIMENT_CONFIG.correct_feedback_duration + EXPERIMENT_CONFIG.rsi) + EXPERIMENT_CONFIG.n_blocks * 15000) * 1.2 / 60000)} minutes.</p>
                     <p><strong>The main task will now begin.</strong></p>
                 </div>
             `;
