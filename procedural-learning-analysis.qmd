@@ -1,0 +1,237 @@
+---
+title: "procedural-learning-graded"
+author: "Cherrie Chang"
+format: html
+editor: visual
+---
+
+# Data Analysis for Procedural Learning Graded Entropy Design Experiment
+
+## Libraries
+```{r}
+#| label: Load R libraries
+#| echo: false
+#| message: false
+
+library(osfr)
+library(dplyr)
+library(tidyr)
+library(zoo)
+```
+
+## Download data from OSF
+```{r}
+#| label: Retrieve pilot data from OSF
+#| echo: false
+#| include: false
+
+osf_retrieve_node("74m32") %>%
+  osf_ls_files() %>%
+  osf_download(path = "data/pilot-data", conflicts="skip")
+
+cherrie_data <- read.csv("data/pilot-data/v11k291uap.csv")
+```
+
+```{r}
+#| label: Bind all data together
+#| echo: false
+#| include: false
+
+data <- list.files("data/pilot-data", full.names = TRUE) %>%
+  lapply(read.csv, colClasses="character") %>%
+  bind_rows()
+```
+
+## Global Variables
+```{r}
+#| label: Experiment configs that stay constant across participants
+#| echo: false
+#| include: false
+
+EXPERIMENT_CONFIG <- list(
+  datapipe_id = "Sz1Mxzs1KPOg",
+  key_mapping_4pos = c("d","f","j","k"),
+  key_mapping_5pos = c("s","d","f","j","k"),
+  key_mapping_6pos = c("s","d","f","j","k","l"),
+  key_mapping_7pos = c("a","s","d","f","j","k","l"),
+  key_mapping_8pos = c("a","s","d","f","j","k","l",";"),
+  n_blocks = 7,
+  rsi = 120,
+  error_feedback_duration = 200,
+  error_tone_duration = 100,
+  correct_feedback_duration = 200,
+  estimated_trial_duration = 500,
+  accuracy_threshold = 0.65,
+	rt_threshold = 1000
+)
+```
+
+## Data Processing
+```{r}
+#| label: Filter out unnecessary columns
+#| echo: false
+#| include: false
+data.filtered <- subset(data, select=c(trial_index, subject_id, matrix_size, transition_matrix, sequence, trials_per_block, total_trials, practice_trials, phase, block, experiment_trial_type, trial_in_block, overall_trial, position, correct_key, response, correct, rt, questionnaire_item)) %>%
+  mutate(rt = as.numeric(rt))
+```
+
+```{r}
+#| label: Exclude subjects that:
+#| 1. Made too many mistakes (more than 45%)
+#| 2. Have too long response time (look at mean, median and spread)
+#| echo: false
+#| include: false
+
+accuracy_excluded_subjects <- data.filtered %>%
+  filter(!is.na(correct)) %>%
+  group_by(subject_id) %>%
+  summarize(error_rate = mean(correct == "false")) %>%
+  filter(error_rate > 0.45) %>%
+  pull(subject_id)
+
+rt_excluded_subjects <- data.filtered %>%
+  filter(
+    (experiment_trial_type == "stimulus" | experiment_trial_type == "retry")
+    & !is.na(rt)) %>% 
+  group_by(subject_id) %>%
+  summarize(
+    median_rt = median(rt),
+    outlier_prop = mean(rt > median(rt) + 3*mad(rt))
+  ) %>%
+  filter(median_rt > 1000 | outlier_prop > 0.2) %>%
+  pull(subject_id)
+
+data.filtered <- data.filtered %>%
+  filter(!subject_id %in% accuracy_excluded_subjects & !subject_id %in% rt_excluded_subjects)
+```
+
+```{r}
+#| label: Clean up data
+#| echo: false
+#| include: false
+
+# Convert NA values
+data.filtered <- data.filtered %>%
+  mutate(across(where(is.character), ~{
+    x <- .
+    x[x %in% c("NA", "na", "null", "NULL", "")] <- NA
+    x
+  }))
+
+# Fill down overall_trial, trial_in_block and block
+data.filtered <- data.filtered %>%
+ group_by(subject_id) %>%
+    arrange(subject_id, row_number()) %>%
+    mutate(
+      overall_trial = if_else(
+        experiment_trial_type %in% c("feedback", "rsi"),
+        zoo::na.locf(overall_trial, na.rm = FALSE),  # Fill down
+        overall_trial  # Keep as-is
+      ),
+      trial_in_block = if_else(
+        experiment_trial_type %in% c("feedback", "rsi"),
+        zoo::na.locf(trial_in_block, na.rm = FALSE), 
+        trial_in_block
+      ),
+      block = if_else(
+        experiment_trial_type %in% c("feedback", "rsi"),
+        zoo::na.locf(block, na.rm = FALSE), 
+        block
+      )
+    ) %>%
+    ungroup()
+```
+
+```{r}
+#| label: Exclude repetitions and trills
+#| echo: false
+#| include: false
+
+# Sanity check -- are there multiple rows for a given subject-overall_trial combination?
+data.filtered.stimulus_only.duplicate_rows <- data.filtered %>%
+  filter(experiment_trial_type == "stimulus" & phase == "main" & !is.na(response)) %>%
+  group_by(subject_id, overall_trial) %>%
+  filter(n() > 1) %>%
+  arrange(subject_id, overall_trial)
+  
+# Remove repetitions and trills and print out removal summary
+detect_and_remove_patterns <- function(df) {
+  stimulus_only <- df %>%
+    filter(experiment_trial_type == "stimulus"& phase == "main" & !is.na(response)) %>%
+    group_by(subject_id) %>% 
+    arrange(subject_id, overall_trial) %>% 
+    mutate(
+      prev1_position = lag(position, 1),
+      prev2_position = lag(position, 2),
+      
+      is_repetition = !is.na(prev1_position) & 
+                      !is.na(prev2_position) &
+                      position == prev1_position & 
+                      prev1_position == prev2_position,
+      
+      is_trill = !is.na(prev1_position) & 
+                 !is.na(prev2_position) &
+                 position == prev2_position & 
+                 position != prev1_position,
+      
+      has_pattern = is_repetition | is_trill
+    ) %>%
+    ungroup()
+  
+  # Create summary per subject
+  pattern_summary <- stimulus_only %>%
+    group_by(subject_id) %>%
+    summarise(
+      total_trials = as.numeric(first(total_trials)),  # Get from the column
+      n_repetitions = sum(is_repetition, na.rm = TRUE),
+      n_trills = sum(is_trill, na.rm = TRUE),
+      total_patterns = sum(has_pattern, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      trials_removed = n_repetitions + n_trills,
+      trials_remaining = total_trials - trials_removed,
+      pct_data_loss = round((trials_removed / total_trials) * 100, 2)
+    )
+  
+  # Print overall summary
+  cat("\n=== Pattern Detection & Removal Summary ===\n")
+  cat("Total subjects:          ", nrow(pattern_summary), "\n")
+  cat("Total main trials:       ", sum(pattern_summary$total_trials), "\n")
+  cat("Total repetitions:       ", sum(pattern_summary$n_repetitions), "\n")
+  cat("Total trills:            ", sum(pattern_summary$n_trills), "\n")
+  cat("Total patterns removed:  ", sum(pattern_summary$trials_removed), "\n")
+  cat("Overall data loss:       ", 
+      round(sum(pattern_summary$trials_removed) / sum(pattern_summary$total_trials) * 100, 2), 
+      "%\n\n")
+  
+  cat("--- Per Subject ---\n")
+  print(pattern_summary)
+  cat("\n")
+  
+  # Get subject-trial combinations that have patterns (to remove)
+  pattern_trials <- stimulus_only %>%
+    filter(has_pattern) %>%
+    select(subject_id, overall_trial)
+  
+  # Remove all rows that belong to pattern trials
+  cleaned_df <- df %>%
+    anti_join(pattern_trials, by = c("subject_id", "overall_trial"))
+  
+  cat("Original df rows:        ", nrow(df), "\n")
+  cat("Cleaned df rows:         ", nrow(cleaned_df), "\n")
+  cat("Rows removed:            ", nrow(df) - nrow(cleaned_df), "\n\n")
+  
+  # Return both the cleaned data and the summary
+  return(list(
+    data = cleaned_df,
+    summary = pattern_summary
+  ))
+}
+
+pattern_removal <- detect_and_remove_patterns(data.filtered)
+data.filtered <- pattern_removal$data
+removal_summary_per_sub <- pattern_removal$summary
+```
+
+## 

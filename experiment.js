@@ -4,6 +4,7 @@ const EXPERIMENT_CONFIG = {
 	datapipe_id: "Sz1Mxzs1KPOg",
 	matrix_size: null, // Will be randomly assigned: 4, 5, 6, 7, or 8
 	transition_matrix: null, // To be set based on assigned matrix size
+	conditional_entropies: null, // To be set based on assigned shuffled matrix
 	sequence: [], // Full sequence for all blocks
 	key_mapping: null, // To be set based on assigned matrix size
 	n_blocks: 3,
@@ -77,6 +78,12 @@ function generateSequence(matrix, nTrials) {
 	}
 
 	return sequence;
+}
+
+function entropy(probs) {
+	probs = Array.isArray(probs) ? probs : Array.from(probs);
+	const p = probs.filter((x) => x > 0);
+	return -p.reduce((sum, prob) => sum + prob * Math.log2(prob), 0);
 }
 
 function createStimulusDisplay(
@@ -197,6 +204,9 @@ async function initializeExperiment() {
 	// Load transition matrix and shuffle it
 	const originalMatrix = MATRICES[EXPERIMENT_CONFIG.matrix_size];
 	EXPERIMENT_CONFIG.transition_matrix = shuffleTransitionMatrix(originalMatrix);
+	EXPERIMENT_CONFIG.conditional_entropies = EXPERIMENT_CONFIG.transition_matrix.map((row) =>
+		entropy(row),
+	);
 	// Note: key_mapping in config is just for storage, still use KEY_MAPPINGS[size] for access
 	EXPERIMENT_CONFIG.key_mapping = KEY_MAPPINGS[EXPERIMENT_CONFIG.matrix_size];
 
@@ -565,7 +575,6 @@ function createFinalFeedback() {
 	return {
 		type: jsPsychHtmlButtonResponse,
 		stimulus: function () {
-
 			// Calculate final block statistics - only use main_stimulus trials
 			const finalBlock = EXPERIMENT_CONFIG.n_blocks - 1;
 			const allData = jsPsych.data
@@ -859,6 +868,7 @@ async function runExperiment() {
 		subject_id: EXPERIMENT_CONFIG.subject_id,
 		matrix_size: EXPERIMENT_CONFIG.matrix_size,
 		transition_matrix: JSON.stringify(EXPERIMENT_CONFIG.transition_matrix),
+		conditional_entropies: JSON.stringify(EXPERIMENT_CONFIG.conditional_entropies),
 		sequence: JSON.stringify(EXPERIMENT_CONFIG.sequence),
 		trials_per_block: EXPERIMENT_CONFIG.trials_per_block,
 		total_trials: EXPERIMENT_CONFIG.total_trials,
@@ -931,7 +941,7 @@ async function runExperiment() {
                     <p>Remember: Respond as quickly and accurately as possible.</p>
 					<p>Now, you will complete ${EXPERIMENT_CONFIG.n_blocks} blocks of ${EXPERIMENT_CONFIG.trials_per_block} trials.</p>
                     <p>Between blocks, you will get a break to rest.</p>
-                    <p>The entire task takes about ${Math.ceil((EXPERIMENT_CONFIG.n_blocks * EXPERIMENT_CONFIG.trials_per_block * (EXPERIMENT_CONFIG.estimated_trial_duration + EXPERIMENT_CONFIG.correct_feedback_duration + EXPERIMENT_CONFIG.rsi) + EXPERIMENT_CONFIG.n_blocks * 15000) * 1.2 / 60000)} minutes.</p>
+                    <p>The entire task takes about ${Math.ceil(((EXPERIMENT_CONFIG.n_blocks * EXPERIMENT_CONFIG.trials_per_block * (EXPERIMENT_CONFIG.estimated_trial_duration + EXPERIMENT_CONFIG.correct_feedback_duration + EXPERIMENT_CONFIG.rsi) + EXPERIMENT_CONFIG.n_blocks * 15000) * 1.2) / 60000)} minutes.</p>
                     <p><strong>The main task will now begin.</strong></p>
                 </div>
             `;
