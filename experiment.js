@@ -191,9 +191,38 @@ function playErrorTone() {
 	oscillator.stop(audioContext.currentTime + 0.1);
 }
 
+/**
+ * Hash a string using SHA-256 to protect participant privacy
+ * @param {string} str - String to hash
+ * @returns {Promise<string>} Hex string of the hash
+ */
+async function hashString(str) {
+	const encoder = new TextEncoder();
+	const data = encoder.encode(str);
+	const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+	const hashArray = Array.from(new Uint8Array(hashBuffer));
+	const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+	return hashHex;
+}
+
 async function initializeExperiment() {
-	// Generate subject ID
-	EXPERIMENT_CONFIG.subject_id = jsPsych.randomization.randomID(10);
+	// Get URL parameters from Prolific
+	const urlParams = new URLSearchParams(window.location.search);
+	const prolific_pid = urlParams.get("PROLIFIC_PID"); // Participant ID
+	const study_id = urlParams.get("STUDY_ID"); // Study ID
+	const session_id = urlParams.get("SESSION_ID"); // Session ID
+
+	// Hash the Prolific ID for privacy protection
+	// Use hashed ID if from Prolific, otherwise generate random ID (for testing)
+	if (prolific_pid) {
+		EXPERIMENT_CONFIG.subject_id = "P_" + (await hashString(prolific_pid));
+		EXPERIMENT_CONFIG.study_id = study_id || "N/A";
+		EXPERIMENT_CONFIG.session_id = session_id || "N/A";
+	} else {
+		EXPERIMENT_CONFIG.subject_id = "R_" + jsPsych.randomization.randomID(10);
+		EXPERIMENT_CONFIG.study_id = "N/A";
+		EXPERIMENT_CONFIG.session_id = "N/A";
+	}
 
 	// Randomly assign matrix size
 	const matrixSizes = [4, 5, 6, 7, 8];
@@ -874,6 +903,8 @@ async function runExperiment() {
 	// Add experiment configuration to all data rows (must be done before trials run)
 	jsPsych.data.addProperties({
 		subject_id: EXPERIMENT_CONFIG.subject_id,
+		study_id: EXPERIMENT_CONFIG.study_id,
+		session_id: EXPERIMENT_CONFIG.session_id,
 		matrix_size: EXPERIMENT_CONFIG.matrix_size,
 		transition_matrix: JSON.stringify(EXPERIMENT_CONFIG.transition_matrix),
 		conditional_entropies: JSON.stringify(EXPERIMENT_CONFIG.conditional_entropies),
