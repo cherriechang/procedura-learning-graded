@@ -1,0 +1,53 @@
+{
+  "matrix_name": "6\u00d76 Variation 3",
+  "matrix_validation": {
+    "n": 6,
+    "is_row_stochastic": true,
+    "is_col_stochastic": true,
+    "is_doubly_stochastic": true,
+    "max_row_deviation": 1.1937330741562668e-05,
+    "max_col_deviation": 2.220446049250313e-16,
+    "stationary_distribution": [
+      0.16666666666666655,
+      0.16666666666666677,
+      0.16666666666666663,
+      0.16666666666666677,
+      0.16666666666666655,
+      0.16666666666666663
+    ],
+    "is_uniform_stationary": true,
+    "max_pi_deviation": 1.1102230246251565e-16,
+    "conditional_entropies": [
+      2.0250334784696626,
+      0.09231803423326972,
+      2.371431847400331,
+      0.5993550673146906,
+      1.5462077547075332,
+      1.0388203668276526
+    ],
+    "entropy_range": [
+      0.09231803423326972,
+      2.371431847400331
+    ],
+    "tolerance_used": 0.0001
+  },
+  "mixing_time": {
+    "tau_mix": 5,
+    "epsilon": 0.18393972058572117,
+    "sequence_to_mixing_ratio": 240.0
+  },
+  "sequence_summary": {
+    "n_sequences": 10,
+    "sequence_length": 1200,
+    "unigram_all_acceptable": true,
+    "unigram_n_acceptable": 10,
+    "unigram_p_value_mean": 0.6811054391036413,
+    "unigram_p_value_min": 0.2383153193075291,
+    "unigram_p_value_max": 0.9958626064261211,
+    "cv_mean": 4.768556946330771,
+    "cv_std": 1.82186662051147,
+    "transition_all_acceptable": false,
+    "transition_n_acceptable": 9,
+    "transition_p_value_mean": 0.5196453846015722
+  }
+}

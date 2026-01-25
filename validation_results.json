@@ -1,0 +1,53 @@
+{
+  "matrix": {
+    "n": 8,
+    "is_row_stochastic": 1,
+    "is_col_stochastic": 1,
+    "is_doubly_stochastic": 1,
+    "max_row_deviation": 3.905163365813813e-05,
+    "max_col_deviation": 2.220446049250313e-16,
+    "stationary_distribution": [
+      0.12500000000000008,
+      0.12500000000000003,
+      0.12500000000000014,
+      0.12499999999999992,
+      0.12500000000000008,
+      0.12499999999999999,
+      0.1249999999999998,
+      0.12499999999999999
+    ],
+    "is_uniform_stationary": 1,
+    "max_pi_deviation": 1.942890293094024e-16,
+    "tolerance_used": 0.0001
+  },
+  "mixing_time": {
+    "mixing_time": 5,
+    "epsilon": 0.18393972058572117
+  },
+  "sequence": {
+    "chi2_statistic": 4.3428571428571425,
+    "degrees_of_freedom": 7,
+    "p_value": 0.7395478555481031,
+    "cv_observed_percent": 8.80630571852711,
+    "cv_expected_percent": 11.180339887498949,
+    "n_trials": 560,
+    "n_positions": 8,
+    "expected_count": 70.0,
+    "observed_counts": [
+      69,
+      59,
+      73,
+      61,
+      73,
+      75,
+      73,
+      77
+    ],
+    "observed_range": [
+      59,
+      77
+    ],
+    "is_acceptable": 1,
+    "interpretation": "Consistent with uniform"
+  }
+}

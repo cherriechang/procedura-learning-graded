@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-01-25T01:38:13.235937",
+  "config": {
+    "matrix_sizes": [
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "n_variations": 5,
+    "n_sequences": 10,
+    "n_blocks_pilot": 7,
+    "n_blocks_full": 20,
+    "trials_per_block_multiplier": 10,
+    "study_type": "full",
+    "mixing_time_max_steps": 500,
+    "tolerance": 0.0001,
+    "output_dir": "sanity_check_results",
+    "matrix_input_dir": "assets/transition-matrices"
+  },
+  "total_matrices_analyzed": 30,
+  "total_sequences_validated": 300,
+  "all_matrices_doubly_stochastic": true,
+  "all_unigrams_acceptable": false,
+  "all_transitions_acceptable": false,
+  "mixing_time_range": [
+    5,
+    6
+  ],
+  "mixing_time_mean": 5.2,
+  "unigram_p_value_mean": 0.6899888378861878,
+  "transition_p_value_mean": 0.5462004765915679
+}

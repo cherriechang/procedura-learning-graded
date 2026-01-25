@@ -1,0 +1,51 @@
+{
+  "matrix_name": "5\u00d75 Variation 5",
+  "matrix_validation": {
+    "n": 5,
+    "is_row_stochastic": true,
+    "is_col_stochastic": true,
+    "is_doubly_stochastic": true,
+    "max_row_deviation": 2.6569779846274955e-06,
+    "max_col_deviation": 2.220446049250313e-16,
+    "stationary_distribution": [
+      0.20000000000000012,
+      0.19999999999999993,
+      0.19999999999999993,
+      0.19999999999999973,
+      0.2000000000000002
+    ],
+    "is_uniform_stationary": true,
+    "max_pi_deviation": 2.7755575615628914e-16,
+    "conditional_entropies": [
+      0.12666384670336106,
+      2.070558836879713,
+      0.7280530225753632,
+      1.6617446988027536,
+      1.1792529920051738
+    ],
+    "entropy_range": [
+      0.12666384670336106,
+      2.070558836879713
+    ],
+    "tolerance_used": 0.0001
+  },
+  "mixing_time": {
+    "tau_mix": 6,
+    "epsilon": 0.18393972058572117,
+    "sequence_to_mixing_ratio": 166.66666666666666
+  },
+  "sequence_summary": {
+    "n_sequences": 10,
+    "sequence_length": 1000,
+    "unigram_all_acceptable": true,
+    "unigram_n_acceptable": 10,
+    "unigram_p_value_mean": 0.6549508392151105,
+    "unigram_p_value_min": 0.1061115950943002,
+    "unigram_p_value_max": 0.9652600021763491,
+    "cv_mean": 4.815957190604936,
+    "cv_std": 1.829359543190076,
+    "transition_all_acceptable": true,
+    "transition_n_acceptable": 10,
+    "transition_p_value_mean": 0.5600856365829755
+  }
+}

@@ -15,10 +15,11 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "jspsych": "^7.3.4",
     "@jspsych/plugin-html-keyboard-response": "^1.1.3",
+    "@jspsych/plugin-instructions": "^1.1.4",
     "@jspsych/plugin-serial-reaction-time": "^1.1.3",
-    "@jspsych/plugin-instructions": "^1.1.4"
+    "jspsych": "^7.3.4",
+    "npyjs": "^1.0.4"
   },
   "devDependencies": {
     "http-server": "^14.1.1"

@@ -1,0 +1,982 @@
+[
+  {
+    "sequence_index": 0,
+    "unigram": {
+      "chi2_statistic": 0.27,
+      "degrees_of_freedom": 4,
+      "p_value": 0.991667559765919,
+      "cv_observed_percent": 1.6431676725154984,
+      "cv_expected_percent": 6.32455532033676,
+      "n_trials": 1000,
+      "n_positions": 5,
+      "expected_count": 200.0,
+      "observed_counts": [
+        203,
+        204,
+        200,
+        195,
+        198
+      ],
+      "observed_range": [
+        195,
+        204
+      ],
+      "is_acceptable": true
+    },
+    "transitions": {
+      "n_positions": 5,
+      "total_transitions": 999,
+      "row_results": [
+        {
+          "from_position": 0,
+          "n_transitions": 203,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        },
+        {
+          "from_position": 1,
+          "n_transitions": 204,
+          "chi2_statistic": 0.38621077207061705,
+          "degrees_of_freedom": 1,
+          "p_value": 0.5342979361997081,
+          "is_acceptable": true,
+          "observed_counts": [
+            0,
+            0,
+            159,
+            0,
+            45
+          ],
+          "expected_counts": [
+            6.708636829209028e-10,
+            4.6532809675548987e-10,
+            162.57096187025894,
+            4.0717157813617427e-10,
+            41.429178513370566
+          ]
+        },
+        {
+          "from_position": 2,
+          "n_transitions": 200,
+          "chi2_statistic": 2.2660714874170207,
+          "degrees_of_freedom": 2,
+          "p_value": 0.3220540972365711,
+          "is_acceptable": true,
+          "observed_counts": [
+            104,
+            0,
+            0,
+            87,
+            9
+          ],
+          "expected_counts": [
+            96.62082991727323,
+            7.907695348362181e-11,
+            7.296316271368497e-11,
+            96.62197882021653,
+            6.757329478742645
+          ]
+        },
+        {
+          "from_position": 3,
+          "n_transitions": 194,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        },
+        {
+          "from_position": 4,
+          "n_transitions": 198,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        }
+      ],
+      "n_rows_tested": 2,
+      "n_rows_acceptable": 2,
+      "all_rows_acceptable": true,
+      "combined_p_value": 0.47489305921612124,
+      "overall_acceptable": true
+    }
+  },
+  {
+    "sequence_index": 1,
+    "unigram": {
+      "chi2_statistic": 3.33,
+      "degrees_of_freedom": 4,
+      "p_value": 0.5041931035219822,
+      "cv_observed_percent": 5.770615218501403,
+      "cv_expected_percent": 6.32455532033676,
+      "n_trials": 1000,
+      "n_positions": 5,
+      "expected_count": 200.0,
+      "observed_counts": [
+        208,
+        211,
+        209,
+        188,
+        184
+      ],
+      "observed_range": [
+        184,
+        211
+      ],
+      "is_acceptable": true
+    },
+    "transitions": {
+      "n_positions": 5,
+      "total_transitions": 999,
+      "row_results": [
+        {
+          "from_position": 0,
+          "n_transitions": 208,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        },
+        {
+          "from_position": 1,
+          "n_transitions": 211,
+          "chi2_statistic": 0.4342271077948658,
+          "degrees_of_freedom": 1,
+          "p_value": 0.5099220269843481,
+          "is_acceptable": true,
+          "observed_counts": [
+            0,
+            0,
+            172,
+            0,
+            39
+          ],
+          "expected_counts": [
+            6.938835151779927e-10,
+            4.812952373304332e-10,
+            168.14937722855214,
+            4.2114315189574884e-10,
+            42.85076797216269
+          ]
+        },
+        {
+          "from_position": 2,
+          "n_transitions": 208,
+          "chi2_statistic": 4.200608298332291,
+          "degrees_of_freedom": 2,
+          "p_value": 0.12241918889588632,
+          "is_acceptable": true,
+          "observed_counts": [
+            113,
+            0,
+            0,
+            86,
+            9
+          ],
+          "expected_counts": [
+            100.48566311396415,
+            8.224003162296668e-11,
+            7.588168922223237e-11,
+            100.48685797302518,
+            7.02762265789235
+          ]
+        },
+        {
+          "from_position": 3,
+          "n_transitions": 188,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        },
+        {
+          "from_position": 4,
+          "n_transitions": 184,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        }
+      ],
+      "n_rows_tested": 2,
+      "n_rows_acceptable": 2,
+      "all_rows_acceptable": true,
+      "combined_p_value": 0.23557670067587988,
+      "overall_acceptable": true
+    }
+  },
+  {
+    "sequence_index": 2,
+    "unigram": {
+      "chi2_statistic": 0.73,
+      "degrees_of_freedom": 4,
+      "p_value": 0.9475784284484411,
+      "cv_observed_percent": 2.701851217221259,
+      "cv_expected_percent": 6.32455532033676,
+      "n_trials": 1000,
+      "n_positions": 5,
+      "expected_count": 200.0,
+      "observed_counts": [
+        194,
+        197,
+        196,
+        207,
+        206
+      ],
+      "observed_range": [
+        194,
+        207
+      ],
+      "is_acceptable": true
+    },
+    "transitions": {
+      "n_positions": 5,
+      "total_transitions": 999,
+      "row_results": [
+        {
+          "from_position": 0,
+          "n_transitions": 194,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        },
+        {
+          "from_position": 1,
+          "n_transitions": 197,
+          "chi2_statistic": 1.5335658120719753,
+          "degrees_of_freedom": 1,
+          "p_value": 0.2155780678338184,
+          "is_acceptable": true,
+          "observed_counts": [
+            0,
+            0,
+            150,
+            0,
+            47
+          ],
+          "expected_counts": [
+            6.478438506638131e-10,
+            4.493609561805466e-10,
+            156.99254651196574,
+            3.9320000437659964e-10,
+            40.00758905457844
+          ]
+        },
+        {
+          "from_position": 2,
+          "n_transitions": 196,
+          "chi2_statistic": 1.2646321083675454,
+          "degrees_of_freedom": 2,
+          "p_value": 0.5313597168754883,
+          "is_acceptable": true,
+          "observed_counts": [
+            93,
+            0,
+            0,
+            99,
+            4
+          ],
+          "expected_counts": [
+            94.68841331892776,
+            7.749541441394937e-11,
+            7.150389945941127e-11,
+            94.68953924381219,
+            6.622182889167792
+          ]
+        },
+        {
+          "from_position": 3,
+          "n_transitions": 206,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        },
+        {
+          "from_position": 4,
+          "n_transitions": 206,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        }
+      ],
+      "n_rows_tested": 2,
+      "n_rows_acceptable": 2,
+      "all_rows_acceptable": true,
+      "combined_p_value": 0.3627494294658128,
+      "overall_acceptable": true
+    }
+  },
+  {
+    "sequence_index": 3,
+    "unigram": {
+      "chi2_statistic": 0.4,
+      "degrees_of_freedom": 4,
+      "p_value": 0.9824769036935782,
+      "cv_observed_percent": 2.0,
+      "cv_expected_percent": 6.32455532033676,
+      "n_trials": 1000,
+      "n_positions": 5,
+      "expected_count": 200.0,
+      "observed_counts": [
+        201,
+        202,
+        199,
+        205,
+        193
+      ],
+      "observed_range": [
+        193,
+        205
+      ],
+      "is_acceptable": true
+    },
+    "transitions": {
+      "n_positions": 5,
+      "total_transitions": 999,
+      "row_results": [
+        {
+          "from_position": 0,
+          "n_transitions": 201,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        },
+        {
+          "from_position": 1,
+          "n_transitions": 201,
+          "chi2_statistic": 0.020664967229208166,
+          "degrees_of_freedom": 1,
+          "p_value": 0.8856954018815418,
+          "is_acceptable": true,
+          "observed_counts": [
+            0,
+            0,
+            161,
+            0,
+            40
+          ],
+          "expected_counts": [
+            6.609980405250072e-10,
+            4.584850365090856e-10,
+            160.18021243099042,
+            4.011837608106423e-10,
+            40.819925888173934
+          ]
+        },
+        {
+          "from_position": 2,
+          "n_transitions": 199,
+          "chi2_statistic": 0.032592312162918725,
+          "degrees_of_freedom": 2,
+          "p_value": 0.9838359079183887,
+          "is_acceptable": true,
+          "observed_counts": [
+            97,
+            0,
+            0,
+            95,
+            7
+          ],
+          "expected_counts": [
+            96.13772576768686,
+            7.86815687162037e-11,
+            7.259834690011654e-11,
+            96.13886892611545,
+            6.723542831348932
+          ]
+        },
+        {
+          "from_position": 3,
+          "n_transitions": 205,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        },
+        {
+          "from_position": 4,
+          "n_transitions": 193,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        }
+      ],
+      "n_rows_tested": 2,
+      "n_rows_acceptable": 2,
+      "all_rows_acceptable": true,
+      "combined_p_value": 0.9913489403951449,
+      "overall_acceptable": true
+    }
+  },
+  {
+    "sequence_index": 4,
+    "unigram": {
+      "chi2_statistic": 3.16,
+      "degrees_of_freedom": 4,
+      "p_value": 0.5314157533685995,
+      "cv_observed_percent": 5.621387729022079,
+      "cv_expected_percent": 6.32455532033676,
+      "n_trials": 1000,
+      "n_positions": 5,
+      "expected_count": 200.0,
+      "observed_counts": [
+        209,
+        210,
+        199,
+        203,
+        179
+      ],
+      "observed_range": [
+        179,
+        210
+      ],
+      "is_acceptable": true
+    },
+    "transitions": {
+      "n_positions": 5,
+      "total_transitions": 999,
+      "row_results": [
+        {
+          "from_position": 0,
+          "n_transitions": 209,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        },
+        {
+          "from_position": 1,
+          "n_transitions": 210,
+          "chi2_statistic": 0.3306660496089268,
+          "degrees_of_freedom": 1,
+          "p_value": 0.565267156897885,
+          "is_acceptable": true,
+          "observed_counts": [
+            0,
+            0,
+            164,
+            0,
+            46
+          ],
+          "expected_counts": [
+            6.905949677126941e-10,
+            4.790142172482984e-10,
+            167.35246074879598,
+            4.191472127872382e-10,
+            42.647683763763816
+          ]
+        },
+        {
+          "from_position": 2,
+          "n_transitions": 198,
+          "chi2_statistic": 1.9525736914631295,
+          "degrees_of_freedom": 2,
+          "p_value": 0.37670727736904974,
+          "is_acceptable": true,
+          "observed_counts": [
+            105,
+            0,
+            0,
+            88,
+            5
+          ],
+          "expected_counts": [
+            95.65462161810049,
+            7.828618394878559e-11,
+            7.223353108654812e-11,
+            95.65575903201436,
+            6.689756183955218
+          ]
+        },
+        {
+          "from_position": 3,
+          "n_transitions": 203,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        },
+        {
+          "from_position": 4,
+          "n_transitions": 179,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        }
+      ],
+      "n_rows_tested": 2,
+      "n_rows_acceptable": 2,
+      "all_rows_acceptable": true,
+      "combined_p_value": 0.5423042362899233,
+      "overall_acceptable": true
+    }
+  },
+  {
+    "sequence_index": 5,
+    "unigram": {
+      "chi2_statistic": 1.03,
+      "degrees_of_freedom": 4,
+      "p_value": 0.9052134008466298,
+      "cv_observed_percent": 3.209361307176242,
+      "cv_expected_percent": 6.32455532033676,
+      "n_trials": 1000,
+      "n_positions": 5,
+      "expected_count": 200.0,
+      "observed_counts": [
+        199,
+        200,
+        195,
+        194,
+        212
+      ],
+      "observed_range": [
+        194,
+        212
+      ],
+      "is_acceptable": true
+    },
+    "transitions": {
+      "n_positions": 5,
+      "total_transitions": 999,
+      "row_results": [
+        {
+          "from_position": 0,
+          "n_transitions": 198,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        },
+        {
+          "from_position": 1,
+          "n_transitions": 200,
+          "chi2_statistic": 0.0045362943875357,
+          "degrees_of_freedom": 1,
+          "p_value": 0.9463014661423307,
+          "is_acceptable": true,
+          "observed_counts": [
+            0,
+            0,
+            159,
+            0,
+            41
+          ],
+          "expected_counts": [
+            6.577094930597087e-10,
+            4.5620401642695085e-10,
+            159.38329595123426,
+            3.9918782170213163e-10,
+            40.616841679775064
+          ]
+        },
+        {
+          "from_position": 2,
+          "n_transitions": 195,
+          "chi2_statistic": 0.7430383146231081,
+          "degrees_of_freedom": 2,
+          "p_value": 0.6896857931769549,
+          "is_acceptable": true,
+          "observed_counts": [
+            98,
+            0,
+            0,
+            89,
+            8
+          ],
+          "expected_counts": [
+            94.20530916934139,
+            7.710002964653126e-11,
+            7.113908364584284e-11,
+            94.20642934971112,
+            6.5883962417740785
+          ]
+        },
+        {
+          "from_position": 3,
+          "n_transitions": 194,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        },
+        {
+          "from_position": 4,
+          "n_transitions": 212,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        }
+      ],
+      "n_rows_tested": 2,
+      "n_rows_acceptable": 2,
+      "all_rows_acceptable": true,
+      "combined_p_value": 0.9311453646571619,
+      "overall_acceptable": true
+    }
+  },
+  {
+    "sequence_index": 6,
+    "unigram": {
+      "chi2_statistic": 0.69,
+      "degrees_of_freedom": 4,
+      "p_value": 0.952556375414191,
+      "cv_observed_percent": 2.6267851073127395,
+      "cv_expected_percent": 6.32455532033676,
+      "n_trials": 1000,
+      "n_positions": 5,
+      "expected_count": 200.0,
+      "observed_counts": [
+        207,
+        204,
+        197,
+        200,
+        192
+      ],
+      "observed_range": [
+        192,
+        207
+      ],
+      "is_acceptable": true
+    },
+    "transitions": {
+      "n_positions": 5,
+      "total_transitions": 999,
+      "row_results": [
+        {
+          "from_position": 0,
+          "n_transitions": 207,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        },
+        {
+          "from_position": 1,
+          "n_transitions": 204,
+          "chi2_statistic": 0.009870182401245911,
+          "degrees_of_freedom": 1,
+          "p_value": 0.9208613398746374,
+          "is_acceptable": true,
+          "observed_counts": [
+            0,
+            0,
+            162,
+            0,
+            42
+          ],
+          "expected_counts": [
+            6.708636829209028e-10,
+            4.6532809675548987e-10,
+            162.57096187025894,
+            4.0717157813617427e-10,
+            41.429178513370566
+          ]
+        },
+        {
+          "from_position": 2,
+          "n_transitions": 197,
+          "chi2_statistic": 1.7327062386381513,
+          "degrees_of_freedom": 2,
+          "p_value": 0.42048220492169386,
+          "is_acceptable": true,
+          "observed_counts": [
+            102,
+            0,
+            0,
+            91,
+            4
+          ],
+          "expected_counts": [
+            95.17151746851412,
+            7.789079918136748e-11,
+            7.186871527297969e-11,
+            95.17264913791328,
+            6.655969536561505
+          ]
+        },
+        {
+          "from_position": 3,
+          "n_transitions": 200,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        },
+        {
+          "from_position": 4,
+          "n_transitions": 191,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        }
+      ],
+      "n_rows_tested": 2,
+      "n_rows_acceptable": 2,
+      "all_rows_acceptable": true,
+      "combined_p_value": 0.7545862606934521,
+      "overall_acceptable": true
+    }
+  },
+  {
+    "sequence_index": 7,
+    "unigram": {
+      "chi2_statistic": 0.58,
+      "degrees_of_freedom": 4,
+      "p_value": 0.9652600021763491,
+      "cv_observed_percent": 2.4083189157584592,
+      "cv_expected_percent": 6.32455532033676,
+      "n_trials": 1000,
+      "n_positions": 5,
+      "expected_count": 200.0,
+      "observed_counts": [
+        196,
+        197,
+        197,
+        209,
+        201
+      ],
+      "observed_range": [
+        196,
+        209
+      ],
+      "is_acceptable": true
+    },
+    "transitions": {
+      "n_positions": 5,
+      "total_transitions": 999,
+      "row_results": [
+        {
+          "from_position": 0,
+          "n_transitions": 195,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        },
+        {
+          "from_position": 1,
+          "n_transitions": 197,
+          "chi2_statistic": 0.1264104093047434,
+          "degrees_of_freedom": 1,
+          "p_value": 0.7221832747560836,
+          "is_acceptable": true,
+          "observed_counts": [
+            0,
+            0,
+            159,
+            0,
+            38
+          ],
+          "expected_counts": [
+            6.478438506638131e-10,
+            4.493609561805466e-10,
+            156.99254651196574,
+            3.9320000437659964e-10,
+            40.00758905457844
+          ]
+        },
+        {
+          "from_position": 2,
+          "n_transitions": 197,
+          "chi2_statistic": 0.3545424779945637,
+          "degrees_of_freedom": 2,
+          "p_value": 0.8375525767894888,
+          "is_acceptable": true,
+          "observed_counts": [
+            91,
+            0,
+            0,
+            99,
+            7
+          ],
+          "expected_counts": [
+            95.17151746851412,
+            7.789079918136748e-11,
+            7.186871527297969e-11,
+            95.17264913791328,
+            6.655969536561505
+          ]
+        },
+        {
+          "from_position": 3,
+          "n_transitions": 209,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        },
+        {
+          "from_position": 4,
+          "n_transitions": 201,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        }
+      ],
+      "n_rows_tested": 2,
+      "n_rows_acceptable": 2,
+      "all_rows_acceptable": true,
+      "combined_p_value": 0.9089616059337301,
+      "overall_acceptable": true
+    }
+  },
+  {
+    "sequence_index": 8,
+    "unigram": {
+      "chi2_statistic": 0.75,
+      "degrees_of_freedom": 4,
+      "p_value": 0.9450227583375868,
+      "cv_observed_percent": 2.7386127875258306,
+      "cv_expected_percent": 6.32455532033676,
+      "n_trials": 1000,
+      "n_positions": 5,
+      "expected_count": 200.0,
+      "observed_counts": [
+        204,
+        200,
+        207,
+        198,
+        191
+      ],
+      "observed_range": [
+        191,
+        207
+      ],
+      "is_acceptable": true
+    },
+    "transitions": {
+      "n_positions": 5,
+      "total_transitions": 999,
+      "row_results": [
+        {
+          "from_position": 0,
+          "n_transitions": 204,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        },
+        {
+          "from_position": 1,
+          "n_transitions": 200,
+          "chi2_statistic": 2.293901421726942,
+          "degrees_of_freedom": 1,
+          "p_value": 0.12988307965163481,
+          "is_acceptable": true,
+          "observed_counts": [
+            0,
+            0,
+            168,
+            0,
+            32
+          ],
+          "expected_counts": [
+            6.577094930597087e-10,
+            4.5620401642695085e-10,
+            159.38329595123426,
+            3.9918782170213163e-10,
+            40.616841679775064
+          ]
+        },
+        {
+          "from_position": 2,
+          "n_transitions": 207,
+          "chi2_statistic": 1.9314880612726149,
+          "degrees_of_freedom": 2,
+          "p_value": 0.38069984199330653,
+          "is_acceptable": true,
+          "observed_counts": [
+            107,
+            0,
+            0,
+            96,
+            4
+          ],
+          "expected_counts": [
+            100.00255896437778,
+            8.184464685554857e-11,
+            7.551687340866394e-11,
+            100.0037480789241,
+            6.9938360104986375
+          ]
+        },
+        {
+          "from_position": 3,
+          "n_transitions": 198,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        },
+        {
+          "from_position": 4,
+          "n_transitions": 190,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        }
+      ],
+      "n_rows_tested": 2,
+      "n_rows_acceptable": 2,
+      "all_rows_acceptable": true,
+      "combined_p_value": 0.19812530451016142,
+      "overall_acceptable": true
+    }
+  },
+  {
+    "sequence_index": 9,
+    "unigram": {
+      "chi2_statistic": 0.56,
+      "degrees_of_freedom": 4,
+      "p_value": 0.9674031890633286,
+      "cv_observed_percent": 2.3664319132398464,
+      "cv_expected_percent": 6.32455532033676,
+      "n_trials": 1000,
+      "n_positions": 5,
+      "expected_count": 200.0,
+      "observed_counts": [
+        198,
+        202,
+        208,
+        198,
+        194
+      ],
+      "observed_range": [
+        194,
+        208
+      ],
+      "is_acceptable": true
+    },
+    "transitions": {
+      "n_positions": 5,
+      "total_transitions": 999,
+      "row_results": [
+        {
+          "from_position": 0,
+          "n_transitions": 197,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        },
+        {
+          "from_position": 1,
+          "n_transitions": 202,
+          "chi2_statistic": 0.4950580389495187,
+          "degrees_of_freedom": 1,
+          "p_value": 0.4816796630479525,
+          "is_acceptable": true,
+          "observed_counts": [
+            0,
+            0,
+            165,
+            0,
+            37
+          ],
+          "expected_counts": [
+            6.642865879903058e-10,
+            4.6076605659122036e-10,
+            160.97712891074661,
+            4.031796999191529e-10,
+            41.02301009657281
+          ]
+        },
+        {
+          "from_position": 2,
+          "n_transitions": 208,
+          "chi2_statistic": 2.3289042604393884,
+          "degrees_of_freedom": 2,
+          "p_value": 0.3120936018550726,
+          "is_acceptable": true,
+          "observed_counts": [
+            99,
+            0,
+            0,
+            98,
+            11
+          ],
+          "expected_counts": [
+            100.48566311396415,
+            8.224003162296668e-11,
+            7.588168922223237e-11,
+            100.48685797302518,
+            7.02762265789235
+          ]
+        },
+        {
+          "from_position": 3,
+          "n_transitions": 198,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        },
+        {
+          "from_position": 4,
+          "n_transitions": 194,
+          "skipped": true,
+          "reason": "Expected counts too small for chi-square"
+        }
+      ],
+      "n_rows_tested": 2,
+      "n_rows_acceptable": 2,
+      "all_rows_acceptable": true,
+      "combined_p_value": 0.4351920569673653,
+      "overall_acceptable": true
+    }
+  }
+]
