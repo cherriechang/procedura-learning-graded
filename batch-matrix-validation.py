@@ -69,7 +69,7 @@ def get_sequence_length(matrix_size: int) -> int:
 
 
 # ============================================================================
-# CORE ANALYSIS FUNCTIONS (from your original file)
+# CORE ANALYSIS FUNCTIONS
 # ============================================================================
 
 def total_variation_distance(p: np.ndarray, q: np.ndarray) -> float:
