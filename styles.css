@@ -17,10 +17,6 @@
 	position: relative;
 }
 
-.position-wrapper.hand-gap {
-	margin-right: 60px; /* Double the normal margin (30px * 2) */
-}
-
 .finger-diagram-container {
 	display: flex;
 	justify-content: center;

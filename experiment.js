@@ -1,4 +1,4 @@
-import {TRANSITION_MATRICES, shuffleTransitionMatrix} from "./modules/matrices.js";
+import {load} from "https://cdn.jsdelivr.net/npm/npyjs@latest/dist/index.js";
 
 const EXPERIMENT_CONFIG = {
 	datapipe_id: "Sz1Mxzs1KPOg",
@@ -7,12 +7,12 @@ const EXPERIMENT_CONFIG = {
 	conditional_entropies: null, // To be set based on assigned shuffled matrix
 	sequence: [], // Full sequence for all blocks
 	key_mapping: null, // To be set based on assigned matrix size
-	n_blocks: 3,
+	n_blocks: 7,
 	trials_per_block: null, // 10x matrix size for sufficient learning
 	practice_trials: null, // 2x matrix size for practice
 	rsi: 120, // ms
-	error_feedback_duration: 200,
 	error_tone_duration: 100,
+	error_feedback_duration: 200,
 	correct_feedback_duration: 200,
 	accuracy_threshold: 0.65, // for adaptive feedback
 	rt_threshold: 1000, // for adaptive feedback
@@ -48,6 +48,39 @@ let experimentState = {
 	currentTrial: 0,
 	trialData: [],
 };
+
+/**
+ * Shuffles a transition matrix by permuting states while preserving the probability distribution.
+ * This reorders which position corresponds to which entropy level without changing the underlying
+ * transition structure.
+ *
+ * @param {number[][]} matrix - Square transition matrix
+ * @returns {number[][]} Shuffled transition matrix with same structure but reordered states
+ */
+function shuffleTransitionMatrix(matrix) {
+	const n = matrix.length;
+
+	// Generate random permutation of indices [0, 1, 2, ..., n-1]
+	const permutation = Array.from({length: n}, (_, i) => i);
+	for (let i = n - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[permutation[i], permutation[j]] = [permutation[j], permutation[i]];
+	}
+
+	// Create new matrix by permuting both rows and columns
+	const shuffled = Array(n)
+		.fill(null)
+		.map(() => Array(n).fill(0));
+
+	for (let i = 0; i < n; i++) {
+		for (let j = 0; j < n; j++) {
+			// Map position i to permutation[i] and position j to permutation[j]
+			shuffled[i][j] = matrix[permutation[i]][permutation[j]];
+		}
+	}
+
+	return shuffled;
+}
 
 function randomChoice(array, probabilities) {
 	const random = Math.random();
@@ -91,34 +124,16 @@ function createStimulusDisplay(
 	matrixSize,
 	showKeys = false,
 	feedbackMessage = "",
-	blockNum = 0, // TEMPORARY: Add block number parameter for testing
 ) {
 	let html = '<div class="feedback-message">';
 	if (feedbackMessage) {
 		html += feedbackMessage;
 	}
 	html += "</div>";
-
-	// TEMPORARY: Testing conditions
-	// Practice (blockNum = -1): no gap, no finger diagram
-	// Block 0: no gap, no finger diagram
-	// Block 1: gap, no finger diagram
-	// Block 2: no gap, finger diagram
-	const showGap = blockNum === 1;
-	const showFingerDiagram = blockNum === 2;
-
-	// Determine the split point between left and right hands
-	// Left hand: A, S, D, F (max 4 keys)
-	// Right hand: J, K, L, ; (max 4 keys)
-	// 4: 2L|2R, 5: 3L|2R, 6: 3L|3R, 7: 4L|3R, 8: 4L|4R
-	const leftHandCount = Math.ceil(matrixSize / 2);
-	const lastLeftIndex = leftHandCount - 1;
-
 	html += '<div class="stimulus-container">';
 	for (let i = 0; i < matrixSize; i++) {
 		const active = i === position ? "active" : "";
-		const gapClass = i === lastLeftIndex && showGap ? "hand-gap" : "";
-		html += `<div class="position-wrapper ${gapClass}">`;
+		html += `<div class="position-wrapper">`;
 		if (showKeys) {
 			html += `<div class="key-label">${KEY_MAPPINGS[matrixSize][i].toUpperCase()}</div>`;
 		}
@@ -126,13 +141,9 @@ function createStimulusDisplay(
 		html += "</div>";
 	}
 	html += "</div>";
-
-	// Add finger diagram below the boxes (only for block 2)
-	if (showFingerDiagram) {
-		html += `<div class="finger-diagram-container">
+	html += `<div class="finger-diagram-container">
 			<img src="assets/finger-diagrams/finger-diagram-${matrixSize}pos.png" alt="Finger position guide" class="finger-diagram" />
 		</div>`;
-	}
 
 	return html;
 }
@@ -193,16 +204,24 @@ async function initializeExperiment() {
 	// Generate subject ID
 	EXPERIMENT_CONFIG.subject_id = jsPsych.randomization.randomID(10);
 
-	// TEMPORARY: Force matrix size to 7 for testing
-	EXPERIMENT_CONFIG.matrix_size = 7;
-
 	// Randomly assign matrix size
-	// const matrixSizes = [4, 5, 6, 7, 8];
-	// const condition = await jsPsychPipe.getCondition(EXPERIMENT_CONFIG.datapipe_id); // 0-4
-	// EXPERIMENT_CONFIG.matrix_size = matrixSizes[condition]; // Update config with assigned matrix size
+	const matrixSizes = [4, 5, 6, 7, 8];
+	const condition = await jsPsychPipe.getCondition(EXPERIMENT_CONFIG.datapipe_id); // 0-4
+	EXPERIMENT_CONFIG.matrix_size = matrixSizes[condition]; // Update config with assigned matrix size
 
 	// Load transition matrix and shuffle it
-	const originalMatrix = MATRICES[EXPERIMENT_CONFIG.matrix_size];
+	const {data, shape} = await load(
+		`./assets/transition-matrices/matrix_${EXPERIMENT_CONFIG.matrix_size}x${EXPERIMENT_CONFIG.matrix_size}.npy`,
+	);
+	console.log("Loaded matrix data:", data, "shape:", shape);
+
+	// Convert flat array to 2D matrix
+	const matrixSize = EXPERIMENT_CONFIG.matrix_size;
+	const originalMatrix = [];
+	for (let i = 0; i < matrixSize; i++) {
+		originalMatrix.push(data.slice(i * matrixSize, (i + 1) * matrixSize));
+	}
+	console.log("Original matrix:", originalMatrix);
 	EXPERIMENT_CONFIG.transition_matrix = shuffleTransitionMatrix(originalMatrix);
 	EXPERIMENT_CONFIG.conditional_entropies = EXPERIMENT_CONFIG.transition_matrix.map((row) =>
 		entropy(row),
@@ -223,20 +242,18 @@ async function initializeExperiment() {
 
 	console.log("Experiment initialized:", {
 		matrixSize: EXPERIMENT_CONFIG.matrix_size,
+		transitionMatrix: EXPERIMENT_CONFIG.transition_matrix,
+		entropies: EXPERIMENT_CONFIG.conditional_entropies,
+		sequence: EXPERIMENT_CONFIG.sequence,
 		totalTrials: EXPERIMENT_CONFIG.total_trials,
 	});
 }
 
-const jsPsych = initJsPsych({
-	on_finish: function () {
-		// Data is already saved via DataPipe, no need to display it
-		// Experiment properties are added in runExperiment() before trials start
-	},
-});
+const jsPsych = initJsPsych();
 
 let timeline = [];
 
-// FULSCREEN
+// FULLSCREEN
 const enter_fullscreen = {
 	type: jsPsychFullscreen,
 	fullscreen_mode: true,
@@ -517,7 +534,7 @@ function createMainTrial(position, blockNum, trialInBlock, overallTrial) {
 // Block break with feedback
 function createBlockBreak(blockNum) {
 	return {
-		type: jsPsychHtmlButtonResponse,
+		type: jsPsychHtmlKeyboardResponse,
 		stimulus: function () {
 			// Calculate block statistics - only use main_stimulus trials
 			const allData = jsPsych.data
@@ -558,11 +575,11 @@ function createBlockBreak(blockNum) {
                         ${feedback}
 
                         <p style="margin-top: 30px;">Feel free to take a break.</p>
-                        <p style="font-size: 14px; color: #666;">Click the button below when you're ready to continue.</p>
+                        <p style="font-size: 14px; color: #666;">Press any key to continue.</p>
                     </div>
                 `;
 		},
-		choices: ["Continue"],
+		choices: "ALL_KEYS",
 		data: {
 			phase: "main",
 			experiment_trial_type: "block_break",
@@ -573,7 +590,7 @@ function createBlockBreak(blockNum) {
 // Final feedback after last block
 function createFinalFeedback() {
 	return {
-		type: jsPsychHtmlButtonResponse,
+		type: jsPsychHtmlKeyboardResponse,
 		stimulus: function () {
 			// Calculate final block statistics - only use main_stimulus trials
 			const finalBlock = EXPERIMENT_CONFIG.n_blocks - 1;
@@ -595,11 +612,11 @@ function createFinalFeedback() {
                         <p>You got ${correctCount} out of ${totalCount} trials correct.</p>
 
                         <p style="margin-top: 30px;">Thank you for completing all the trials!</p>
-                        <p style="font-size: 14px; color: #666;">Click continue to proceed to a few final questions.</p>
+                        <p style="font-size: 14px; color: #666;">Press any key to proceed to a few final questions.</p>
                     </div>
                 `;
 		},
-		choices: ["Continue"],
+		choices: "ALL_KEYS",
 		data: {
 			phase: "main",
 			experiment_trial_type: "final_feedback",
@@ -697,7 +714,7 @@ const q2b_describe_regularity = {
 	},
 };
 
-// Q2c: Confidence (THIS IS KEY)
+// Q2c: Confidence
 const q2c_confidence = {
 	timeline: [
 		{
