@@ -873,7 +873,7 @@ const q4b_confidence_guess = {
 
 // Debrief
 const debrief = {
-	type: jsPsychHtmlButtonResponse,
+	type: jsPsychHtmlKeyboardResponse,
 	stimulus: `<div class="instruction-text">
                 <h2>Thank You!</h2>
                 <p>You have completed the experiment.</p>
@@ -882,14 +882,13 @@ const debrief = {
                 while others were more variable.</p>
                 <p>Your data will help us understand how people learn these kinds of patterns.</p>
                 <p>Thank you for your participation!</p>
+                <p><strong>You will now be redirected back to Prolific.</strong></p>
             </div>`,
-	choices: ["Close Window"],
+	choices: "NO_KEYS",
+	trial_duration: 5000,
 	data: {
 		phase: "debrief",
 		experiment_trial_type: "debrief",
-	},
-	on_finish: function () {
-		window.close();
 	},
 };
 
