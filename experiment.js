@@ -851,25 +851,6 @@ const q4b_confidence_guess = {
 	},
 };
 
-// Technical difficulties question
-const q5_technical = {
-	type: jsPsychSurveyText,
-	questions: [
-		{
-			prompt:
-				"Did you experience any technical difficulties, bugs, or issues during this experiment? If so, please describe them below. (This is a pilot testing phase, so your feedback is very helpful!)",
-			name: "technical_difficulties",
-			rows: 5,
-			required: false,
-		},
-	],
-	data: {
-		phase: "questionnaire",
-		experiment_trial_type: "questionnaire",
-		questionnaire_item: "technical_difficulties",
-	},
-};
-
 // Debrief
 const debrief = {
 	type: jsPsychHtmlButtonResponse,
@@ -1032,7 +1013,6 @@ async function runExperiment() {
 	timeline.push(q3b_describe_strategy);
 	timeline.push(q4_forced_description);
 	timeline.push(q4b_confidence_guess);
-	timeline.push(q5_technical);
 
 	// Data saving (after questionnaire, before debrief)
 	timeline.push(save_data(filename));
