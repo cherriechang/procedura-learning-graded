@@ -58,9 +58,12 @@ EXPERIMENT_CONFIG <- list(
 #| echo: false
 #| include: false
 
-osf_retrieve_node("5zn6u") %>%
-  osf_ls_files() %>%
-  osf_download(path = "data/4x4-data", conflicts="skip")
+files <- osf_retrieve_node("5zn6u") %>%
+  osf_ls_files() 
+  map(osf_ls_files) %>%
+  bind_rows()
+
+osf_download(path = "data/4x4-data", conflicts="skip")
 ```
 
 ```{r}
@@ -78,7 +81,7 @@ df.raw <- list.files("data/4x4-data", full.names = TRUE) %>%
 #| label: Filter out unnecessary columns
 #| echo: false
 #| include: false
-df <- subset(df.raw, select=c(trial_index, subject_id, matrix_size, transition_matrix, sequence, conditional_entropies, trials_per_block, total_trials, practice_trials, phase, block, experiment_trial_type, trial_in_block, overall_trial, position, correct_key, response, correct, rt, questionnaire_item)) %>%
+df <- subset(df.raw, select=c(trial_index, subject_id, matrix_size, transition_matrix, sequence, conditional_entropies, trials_per_block, total_trials, practice_trials, phase, block, experiment_trial_type, trial_in_block, overall_trial, position, correct_key, response, correct, rt, conditional_entropy, surprisal, questionnaire_item)) %>%
   mutate(rt = as.numeric(rt))
 ```
 
@@ -192,100 +195,6 @@ df <- df %>%
 ```
 
 ```{r}
-#| label: Exclude repetitions and trills from df
-#| echo: false
-#| include: false
-
-# Sanity check -- are there multiple rows for a given subject-overall_trial combination?
-df.duplicate.stimulus.overall_trial <- df %>%
-  filter(experiment_trial_type == "stimulus" & !is.na(response)) %>%
-  # My silly pre-pilot data had some duplicate rows that had response == null. Might be an earlier
-  # version of experiment code as it isn't in the newest dataset
-  group_by(subject_id, overall_trial) %>%
-  filter(n() > 1) %>%
-  arrange(subject_id, overall_trial)
-  
-# Remove repetitions and trills and print out removal summary
-find_and_remove_reps_trills <- function(df) {
-  stimulus_only <- df %>%
-    filter(experiment_trial_type == "stimulus"& phase == "main" & !is.na(response)) %>%
-    group_by(subject_id) %>% 
-    arrange(subject_id, overall_trial) %>% 
-    mutate(
-      prev1_position = lag(position, 1),
-      prev2_position = lag(position, 2),
-      
-      is_repetition = !is.na(prev1_position) & 
-                      !is.na(prev2_position) &
-                      position == prev1_position & 
-                      prev1_position == prev2_position,
-      
-      is_trill = !is.na(prev1_position) & 
-                 !is.na(prev2_position) &
-                 position == prev2_position & 
-                 position != prev1_position,
-      
-      has_pattern = is_repetition | is_trill
-    ) %>%
-    ungroup()
-  
-  # Create summary per subject
-  pattern_summary <- stimulus_only %>%
-    group_by(subject_id) %>%
-    summarise(
-      total_trials = as.numeric(first(total_trials)),  # Get from the column
-      n_repetitions = sum(is_repetition, na.rm = TRUE),
-      n_trills = sum(is_trill, na.rm = TRUE),
-      total_patterns = sum(has_pattern, na.rm = TRUE),
-      .groups = "drop"
-    ) %>%
-    mutate(
-      trials_removed = n_repetitions + n_trills,
-      trials_remaining = total_trials - trials_removed,
-      pct_data_loss = round((trials_removed / total_trials) * 100, 2)
-    )
-  
-  # Print overall summary
-  cat("\n=== Pattern Detection & Removal Summary ===\n")
-  cat("Total subjects:          ", nrow(pattern_summary), "\n")
-  cat("Total main trials:       ", sum(pattern_summary$total_trials), "\n")
-  cat("Total repetitions:       ", sum(pattern_summary$n_repetitions), "\n")
-  cat("Total trills:            ", sum(pattern_summary$n_trills), "\n")
-  cat("Total patterns removed:  ", sum(pattern_summary$trials_removed), "\n")
-  cat("Overall data loss:       ", 
-      round(sum(pattern_summary$trials_removed) / sum(pattern_summary$total_trials) * 100, 2), 
-      "%\n\n")
-  
-  cat("--- Per Subject ---\n")
-  print(pattern_summary)
-  cat("\n")
-  
-  # Get subject-trial combinations that have patterns (to remove)
-  pattern_trials <- stimulus_only %>%
-    filter(has_pattern) %>%
-    select(subject_id, overall_trial)
-  
-  # Remove all rows that belong to pattern trials
-  cleaned_df <- df %>%
-    anti_join(pattern_trials, by = c("subject_id", "overall_trial"))
-  
-  cat("Original df rows:        ", nrow(df), "\n")
-  cat("Cleaned df rows:         ", nrow(cleaned_df), "\n")
-  cat("Rows removed:            ", nrow(df) - nrow(cleaned_df), "\n\n")
-  
-  # Return both the cleaned data and the summary
-  return(list(
-    data = cleaned_df,
-    summary = pattern_summary
-  ))
-}
-
-reps_trills_removal <- find_and_remove_reps_trills(df)
-df <- reps_trills_removal$data
-removal_summary_per_sub <- reps_trills_removal$summary
-```
-
-```{r}
 #| label: Filter df down to only stimulus, non-retry trials
 #| echo: false
 #| include: false
@@ -295,26 +204,12 @@ df <- df %>%
 ```
 
 ```{r}
-#| label: Add entropy for each stimulus trial
+#| label: Make a new column for log(rt)
 #| echo: false
 #| include: false
 
 df <- df %>%
-  mutate(entropy = map2_dbl(
-    conditional_entropies, position,
-    ~ {
-      # case 1: position is NA → skip = return NA
-      if (is.na(.y)) return(NA_real_)
-      
-      idx <- .y + 1  # convert 0-based to 1-based
-      
-      # case 2: index out of bounds → return NA
-      if (idx > length(.x) || idx < 1) return(NA_real_)
-      
-      # otherwise extract normally
-      .x[idx]
-    }
-  ))
+  mutate(log_rt=log(rt))
 ```
 
 ```{r}
@@ -324,16 +219,27 @@ df <- df %>%
 
 df <- df %>%
   group_by(subject_id, block) %>%
-  mutate(previous_entropy=lag(entropy, 1))
+  mutate(previous_entropy=lag(conditional_entropy, 1))
 ```
 
 ```{r}
-#| label: Make a new column for log(rt)
+#| label: Make a new column for prev_entropy_c
 #| echo: false
 #| include: false
 
 df <- df %>%
-  mutate(log_rt=log(rt))
+  group_by(matrix_size) %>%
+  mutate(prev_entropy_c=previous_entropy-mean(previous_entropy, na.rm=TRUE))
+```
+
+```{r}
+#| label: Make a new column for surprisal_c
+#| echo: false
+#| include: false
+
+df <- df %>%
+  group_by(matrix_size) %>%
+  mutate(surprisal_c=surprisal-mean(surprisal, na.rm=TRUE))
 ```
 
 ```{r}
@@ -351,12 +257,9 @@ df <- df %>%
 #| include: false
 
 df <- df %>%
-  group_by(block) %>%
+  group_by(block, subject_id) %>%
   slice(2:n())
 ```
-## Stats!
-
-### Power Analysis
 
 ```{r}
 #| label: Make subset of df with only correct trials
@@ -366,6 +269,9 @@ df <- df %>%
 df.correct <- df %>%
   filter(correct)
 ```
+## Stats!
+
+### Power Analysis
 
 ### Descriptive stats
 
@@ -492,15 +398,352 @@ by_entropy_across_subs <- df %>%
 ```
 
 
-## Planned
+## H0. Learning Effect
 ```{r}
+#| label: Learning effect lmer models
+#| (filter for correct trials and group by matrix_size)
 #| 
-#| m1 <- lmer(rt ~ factor(position) + block + (block | participant) + (1 | position))
-#| m2 <- lmer(rt ~ entropy + block + (entropy + block | participant))
-#| m3 <- lmer(rt ~ entropy + factor(position) + block + (entropy + block | participant) + (1 | position))
+#| echo: true
+#| include: true
 
-#| anova(m1, m3)
-#| anova(m2, m3)
+data.m_h0 <- df %>%
+  group_by(matrix_size)
+
+data.m_h0.correct <- df.correct %>%
+  group_by(matrix_size)
+
+m_h0_rt <-
+  lmer(-log_rt ~ block + is_repetition + (block | subject_id) + (1 | position),
+       data=data.m_h0,
+       REML=FALSE,
+       control=glmerControl(optimizer="bobyqa")) # can change
+
+m_h0_acc <-
+  glmer(correct ~ block + is_repetition + (block | subject_id) + (1 | position),
+       data=data.m_h0,
+       family=binomial,
+       control=glmerControl(optimizer="bobyqa")) # can change
+
+summary(m_h0_rt)
+summary(m_h0_acc)
 ```
+
+**H1 & H2. Surprisal and previous position entropy effects.** For H1 & H2, we analyze each block independently. First, we determine the effects structure by analyzing only the final block as follows: *(When the best-fit base model for surprisal and/or previous position entropy effects has been found, we can then examine learning trajectories by adding block as a continuous predictor)*
+
+```{r}
+#| label: Surprisal x previous position entropy lmer models
+#| (filter for correct trials + final block and group by matrix_size)
+#| 
+#| echo: true
+#| include: true
+
+data.m_h1h2 <- df %>%
+  filter(block==EXPERIMENT_CONFIG[["n_blocks"]]-1) %>%
+  group_by(matrix_size)
+
+data.m_h1h2.correct <- df.correct %>%
+  filter(block==EXPERIMENT_CONFIG[["n_blocks"]]-1) %>%
+  group_by(matrix_size)
+
+m_surprisal_x_entropy_rt <- 
+  lmer(log_rt ~ surprisal_c * prev_entropy_c + is_repetition +
+         (surprisal_c * prev_entropy_c + is_repetition | subject_id) +
+         (1 | position),
+       data=data.m_h1h2,
+       REML=FALSE,
+       control=lmerControl(optimizer="bobyqa")) # can change
+
+m_surprisal_x_entropy_acc <-
+  glmer(correct ~ surprisal_c * prev_entropy_c + is_repetition +
+         (surprisal_c * prev_entropy_c + is_repetition | subject_id) +
+         (1 | position),
+       data=data.m_h1h2,
+       family=binomial,
+       control=glmerControl(optimizer="bobyqa")) # can change
+
+summary(m_surprisal_x_entropy_rt)
+summary(m_surprisal_x_entropy_acc)
+```
+
+We then prune the model as follows:
+
+If the model fails to converge, we will first try blmer/bglmer to see if that addresses convergence.
+
+If not, we will see if any of these random slope structures converges for subject_id (still using blmer/bglmer):
+
+```{r}
+#| label: Surprisal x previous position entropy lmer models
+#| Prune: position
+#| (filter for correct trials + final block and group by matrix_size)
+#| 
+#| echo: true
+#| include: true
+
+m_surprisal_x_entropy_prune_position_rt <- 
+  blmer(log_rt ~ surprisal_c * prev_entropy_c + is_repetition +
+         (surprisal_c * prev_entropy_c + is_repetition | subject_id),
+       data=data.m_h1h2,
+       REML=FALSE,
+       control=lmerControl(optimizer="nloptwrap")) # can change
+
+m_surprisal_x_entropy_prune_position_acc <-
+  bglmer(correct ~ surprisal_c * prev_entropy_c + is_repetition +
+         (surprisal_c * prev_entropy_c + is_repetition | subject_id),
+       data=data.m_h1h2,
+       family=binomial,
+       REML=FALSE,
+       control=lmerControl(optimizer="nloptwrap")) # can change
+
+summary(m_surprisal_x_entropy_prune_position_rt)
+summary(m_surprisal_x_entropy_prune_position_acc)
+```
+
+```{r}
+#| label: Surprisal x previous position entropy lmer models
+#| Prune: position, repetition
+#| (filter for correct trials + final block and group by matrix_size)
+#| 
+#| echo: true
+#| include: true
+
+m_surprisal_x_entropy_prune_position_repetition_rt <- 
+  blmer(log_rt ~ surprisal_c * prev_entropy_c +
+         (surprisal_c * prev_entropy_c | subject_id),
+       data=data.m_h1h2,
+       REML=FALSE,
+       control=lmerControl(optimizer="nloptwrap")) # can change
+
+m_surprisal_x_entropy_prune_position_repetition_acc <-
+  bglmer(correct ~ surprisal_c * prev_entropy_c  +
+         (surprisal_c * prev_entropy_c | subject_id),
+       data=data.m_h1h2,
+       family=binomial,
+       REML=FALSE,
+       control=lmerControl(optimizer="nloptwrap")) # can change
+
+summary(m_surprisal_x_entropy_prune_position_repetition_rt)
+summary(m_surprisal_x_entropy_prune_position_repetition_acc)
+```
+
+And then we will try treating surprisal and previous position entropy as individual fixed effects, instead of interacting:
+
+```{r}
+#| label: Surprisal + previous position entropy lmer models
+#| (filter for correct trials + final block and group by matrix_size)
+#| 
+#| echo: true
+#| include: true
+
+m_surprisal_entropy_rt <-
+  blmer(log_rt ~ surprisal_c + prev_entropy_c + is_repetition +
+         (surprisal_c * prev_entropy_c + is_repetition | subject_id) +
+         (1 | position),
+       data=data.m_h1h2,
+       REML=FALSE,
+       control=lmerControl(optimizer="nloptwrap")) # can change
+
+m_surprisal_entropy_acc <- 
+    bglmer(correct ~ surprisal_c + prev_entropy_c + is_repetition +
+           (surprisal_c * prev_entropy_c + is_repetition | subject_id) +
+           (1 | position),
+       data=data.m_h1h2,
+       family=binomial,
+       REML=FALSE,
+       control=lmerControl(optimizer="nloptwrap")) # can change
+
+summary(m_surprisal_entropy_rt)
+summary(m_surprisal_entropy_acc)
+```
+
+```{r}
+#| label: Surprisal + previous position entropy effect lmer models
+#| Prune: position
+#| (filter for correct trials + final block and group by matrix_size)
+#| 
+#| echo: true
+#| include: true
+
+m_surprisal_entropy_prune_position_rt <-
+  blmer(log_rt ~ surprisal_c * prev_entropy_c + is_repetition +
+         (surprisal_c * prev_entropy_c + is_repetition | subject_id),
+       data=data.m_h1h2,
+       REML=FALSE,
+       control=lmerControl(optimizer="nloptwrap")) # can change
+
+m_surprisal_entropy_prune_position_acc <- 
+    bglmer(correct ~ surprisal_c + prev_entropy_c + is_repetition +
+         (surprisal_c * prev_entropy_c + is_repetition | subject_id) +
+         (1 | position),
+       data=data.m_h1h2,
+       family=binomial,
+       REML=FALSE,
+       control=lmerControl(optimizer="nloptwrap")) # can change
+
+summary(m_surprisal_entropy_prune_position_rt)
+summary(m_surprisal_entropy_prune_position_acc)
+```
+
+```{r}
+#| label: Surprisal + previous position entropy effect lmer models
+#| Prune: position, repetition
+#| (filter for correct trials + final block and group by matrix_size)
+#| 
+#| echo: true
+#| include: true
+
+m_surprisal_entropy_prune_position_repetition_rt <-
+  blmer(log_rt ~ surprisal_c * prev_entropy_c +
+         (surprisal_c * prev_entropy_c | subject_id),
+       data=data.m_h1h2,
+       REML=FALSE,
+       control=lmerControl(optimizer="nloptwrap")) # can change
+
+m_surprisal_entropy_prune_position_repetition_acc <- 
+    bglmer(correct ~ surprisal_c + prev_entropy_c  +
+         (surprisal_c * prev_entropy_c | subject_id) +
+         (1 | position),
+       data=data.m_h1h2,
+       family=binomial,
+       REML=FALSE,
+       control=lmerControl(optimizer="nloptwrap")) # can change
+
+summary(m_surprisal_entropy_prune_position_repetition_rt)
+summary(m_surprisal_entropy_prune_position_repetition_acc)
+```
+
+If that still doesn't work, we can further separate out surprisal_c and prev_entropy_c:
+
+```{r}
+#| label: Surprisal effect lmer models
+#| (filter for correct trials + final block and group by matrix_size)
+#| 
+#| echo: true
+#| include: true
+
+m_surprisal_rt <-
+  blmer(log_rt ~ surprisal_c +
+         (surprisal_c | subject_id),
+       data=data.m_h1h2,
+       REML=FALSE,
+       control=lmerControl(optimizer="nloptwrap")) # can change
+
+m_surprisal_acc <- 
+    bglmer(correct ~ surprisal_c +
+         (surprisal_c | subject_id) +
+         (1 | position),
+       data=data.m_h1h2,
+       family=binomial,
+       REML=FALSE,
+       control=lmerControl(optimizer="nloptwrap")) # can change
+
+summary(m_surprisal_rt)
+summary(m_surprisal_acc)
+```
+
+```{r}
+#| label: Previous entropy effect lmer models
+#| (filter for correct trials + final block and group by matrix_size)
+#| 
+#| echo: true
+#| include: true
+
+m_entropy_rt <-
+  blmer(log_rt ~ prev_entropy_c +
+         (prev_entropy_c | subject_id),
+       data=data.m_h1h2,
+       REML=FALSE,
+       control=lmerControl(optimizer="nloptwrap")) # can change
+
+m_prev_entropy_c_acc <- 
+    bglmer(correct ~ prev_entropy_c +
+         (prev_entropy_c | subject_id) +
+         (1 | position),
+       data=data.m_h1h2,
+       family=binomial,
+       REML=FALSE,
+       control=lmerControl(optimizer="nloptwrap")) # can change
+
+summary(m_entropy_rt)
+summary(m_entropy_acc)
+```
+
+And look at what is_repetition contributes:
+
+```{r}
+#| label: Repetition effect lmer models
+#| (filter for correct trials + final block and group by matrix_size)
+#| 
+#| echo: true
+#| include: true
+
+m_repetition_rt <-
+  blmer(-log_rt ~ is_repetition +
+         (is_repetition | subject_id),
+       data=data.m_h1h2,
+       REML=FALSE,
+       control=lmerControl(optimizer="nloptwrap")) # can change
+
+m_repetition_acc <- 
+    bglmer(correct ~ is_repetition +
+         (is_repetition | subject_id),
+       data=data.m_h1h2,
+       family=binomial,
+       REML=FALSE,
+       control=lmerControl(optimizer="nloptwrap")) # can change
+
+summary(m_repetition_rt)
+summary(m_repetition_acc)
+```
+
+If none of those converge, we check to see if we made an error somewhere, because at least one of them should converge! The model with the most random slopes that converges is now our base model (for the moment).
+
+Next, we test the significance of random slopes. We iteratively remove random slopes and check whether the result is worse (has a higher AIC). As soon as we can't remove any random slopes without increasing AIC, that is now the random effects structure we will use.
+
+Next, we use model-comparison to determine fixed effects. Our base model is: `~ surprisal_c * prev_entropy_c + is_repetition + [random effects]`
+
+First, we check for a repetition effect by comparing the base model with: `~ surprisal_c * prev_entropy_c + [random effects]`
+
+If the base model has a lower AIC, the effect of repetition is significant. (This is very, very likely). If not, our new base model is the one without the is_repetition effect. We use this base model below.
+
+We test whether there is an interaction by comparing the above with: `~ surprisal_c  + prev_entropy_c + is_repetition + [random effects]`
+
+If the simpler model has a higher AIC, the interaction is significant and we stop. There is a surprisal effect (H1) and an entropy effect (H2).
+
+If there is no interaction, we now compare the no-interaction model to models that lack one of the main effects of entropy or surprisal. So we compare against two models. If AIC for either of the new models is lower, then the corresponding fixed effect is not significant and can be eliminated.
+
+If both entropy and surprisal are significant (eliminating either increases AIC), we are done and interpret H1 and H2. Otherwise, we try eliminating both of these fixed effects. If that increases AIC over a model with one fixed effect, then that fixed effect is definitely significant. (Hopefully this doesn't happen with both fixed effects, which would suggest that surprisal and entropy are so correlated that we can't distinguish them.)
+
+**H3. Moderation from number of positions.** filter(correct) %\>% group_by(matrix_size, block) %\>% model()
+
+```{r}
+#| label: Num positions effect lmer models
+#| (filter for correct trials and group by matrix_size and block)
+#| 
+#| echo: true
+#| include: true
+
+m_matrix_size_rt <-
+  blmer(-log_rt ~ matrix_size + is_repetition + (block | subject_id) + (1 | position),
+       data=data.m_h1h2,
+       REML=FALSE,
+       control=lmerControl(optimizer="nloptwrap")) # can change
+
+m_matrix_size_acc <- 
+    bglmer(correct ~ matrix_size + is_repetition + (block | subject_id) + (1 | position),
+       data=data.m_h1h2,
+       family=binomial,
+       REML=FALSE,
+       control=lmerControl(optimizer="nloptwrap")) # can change
+
+summary(m_matrix_size_rt)
+summary(m_matrix_size_acc)
+```
+
+For each of the fixed effects used for H1-H2, recover the effect size estimate. Now, for each fixed effect: `effect_size ~ matrix_size*block`
+
+Note that there are no random effects. We use `lm()` and get p-values in the normal way.
+
+Models will be fit with ML for model comparison; final models refit with REML for inference.
+
 
 
