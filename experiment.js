@@ -889,6 +889,8 @@ const debrief = {
 	data: {
 		phase: "debrief",
 		experiment_trial_type: "debrief",
+		transition_matrix: JSON.stringify(EXPERIMENT_CONFIG.transition_matrix),
+		conditional_entropies: JSON.stringify(EXPERIMENT_CONFIG.conditional_entropies),
 	},
 	on_load: function () {
 		// Attempt redirect after a short delay
@@ -923,9 +925,6 @@ async function runExperiment() {
 		study_id: EXPERIMENT_CONFIG.study_id,
 		session_id: EXPERIMENT_CONFIG.session_id,
 		matrix_size: EXPERIMENT_CONFIG.matrix_size,
-		transition_matrix: JSON.stringify(EXPERIMENT_CONFIG.transition_matrix),
-		conditional_entropies: JSON.stringify(EXPERIMENT_CONFIG.conditional_entropies),
-		sequence: JSON.stringify(EXPERIMENT_CONFIG.sequence),
 		trials_per_block: EXPERIMENT_CONFIG.trials_per_block,
 		total_trials: EXPERIMENT_CONFIG.total_trials,
 		practice_trials: EXPERIMENT_CONFIG.practice_trials,
