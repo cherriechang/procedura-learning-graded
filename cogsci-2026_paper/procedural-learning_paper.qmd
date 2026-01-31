@@ -17,6 +17,44 @@ format:
 bibliography: CogSci_Template.bib
 editor: source
 ---
+```{r}
+#| label: Load R libraries
+#| echo: false
+#| message: false
+
+library(osfr)
+library(dplyr)
+library(tidyr)
+library(tidyverse)
+library(zoo)
+library(jsonlite)
+library(clipr)
+library(here)
+```
+
+```{r}
+#| label: Experiment configs that stay constant across participants
+#| echo: false
+#| include: false
+
+EXPERIMENT_CONFIG <- list(
+  datapipe_id_4x4 = "lpRUgvFf5pm4",
+  osf_id_4x4 = "5zn6u",
+  key_mapping_4pos = c("d","f","j","k"),
+  key_mapping_5pos = c("s","d","f","j","k"),
+  key_mapping_6pos = c("s","d","f","j","k","l"),
+  key_mapping_7pos = c("a","s","d","f","j","k","l"),
+  key_mapping_8pos = c("a","s","d","f","j","k","l",";"),
+  n_blocks = 20,
+  rsi = 120,
+  error_feedback_duration = 200,
+  error_tone_duration = 100,
+  correct_feedback_duration = 200,
+  estimated_trial_duration = 500,
+  accuracy_threshold = 0.65,
+	rt_threshold = 1000
+)
+```
 
 # Abstract
 ::: {.abstract}
@@ -29,12 +67,61 @@ Your abstract text here. The abstract should be one paragraph. Following the abs
 
 Your introduction text here. You can cite references using `@NewellSimon1972a` or `[@ChalnickBillman1988a]`.
 
-# Transition Matrices
+# Method
 
 ## Overall Design
+Our experiment involves a set of keyuses transition matrices to generate the sequence of positions in which a mole appears. Each matrix defines the probabilities of transitioning from one position to another on the screen, with the size of the matrix corresponding to the number of positions. For example, a 4x4 matrix defines transitions among 4 positions, while an 8x8 matrix defines transitions among 8 positions.
 
+## Participants
+```{r}
+#| label: Demographic data
+#| include: false
+#| echo: false
 
-## Hypothesses
+df.demographics <- list.files(here("demographic-data/"), pattern = "*.csv", full.names=TRUE) %>%
+  lapply(function(f) {
+    matrix_size <- gsub('.*_(\\dx\\d)\\.csv', '\\1', basename(f))
+    read.csv(f) %>%
+      mutate(Matrix.size = matrix_size)
+  }) %>%
+  bind_rows() %>%
+  filter(Status=="APPROVED")
+
+overall_N <- nrow(df.demographics)
+overall_mean_age <- mean(as.numeric(df.demographics$Age), na.rm=TRUE)
+overall_median_age <- median(as.numeric(df.demographics$Age), na.rm=TRUE)
+overall_sd_age <- sd(as.numeric(df.demographics$Age), na.rm=TRUE)
+overall_age_range <- range(as.numeric(df.demographics$Age), na.rm=TRUE)
+
+N_nationalities <- length(unique(df.demographics$Nationality))
+N_languages <- length(unique(df.demographics$Language))
+
+# Gender distribution
+gender_counts <- table(df.demographics$Sex)
+n_female <- gender_counts["Female"]
+n_male <- gender_counts["Male"]
+n_other <- sum(gender_counts[!names(gender_counts) %in% c("Female", "Male")], na.rm=TRUE)
+
+df.demographics.group_summary <- df.demographics %>%
+  group_by(Matrix.size) %>%
+  summarise(N = n(),
+            mean_age = mean(as.numeric(Age), na.rm=TRUE),
+            sd_age = sd(as.numeric(Age), na.rm=TRUE),
+            min_age = min(as.numeric(Age), na.rm=TRUE),
+            max_age = max(as.numeric(Age), na.rm=TRUE))
+
+group_N <- first(df.demographics.group_summary$N)
+N_5x5 <- df.demographics.group_summary %>%
+  filter(Matrix.size=="5x5") %>%
+  pull(N)
+```
+
+We recruited `r overall_N` participants (`r n_female` female, `r n_male` male) on the online recruitment platform Prolific, with `r group_N` participants per condition (`r N_5x5` in 5x5 condition). We screened for participants with an approval rating above 95% from previous Prolific studies. Participants ranged in age from `r overall_age_range[1]` to `r overall_age_range[2]` years ($\mu$=`r round(overall_mean_age, 1)`, Mdn=`r overall_median_age`, $\sigma$=`r overall_sd_age`), representing `r N_nationalities` nationalities and `r N_languages` primary languages. Participants were compensated at $12.00 per hour, with expected completion time varying by condition (~20-40 minutes). All participants provided informed consent prior to beginning the experiment. The study was approved by the Institutional Review Board at the MGH Institute of Health Professions.
+
+## Transition Matrices
+Between-subjects manipulation of the number of positions to handle, which is the same thing as the size of the transition matrix used to generate the position sequence. Participants are randomly assigned to one of five matrix size conditions (4x4, 5x5, 6x6, 7x7, 8x8). The transition matrix describes the number of positions on screen to respond to, and the probabilistic structure the transitions between positions follow. Because larger matrix sizes/sequences with more positions require more trials for the participant to observe the same number of trials on average for each position compared to smaller matrix sizes, we also vary the total number of trials across conditions, setting it as 20 blocks \* 10 \* matrix_length for each condition. We also vary the total number of practice trials similarly, with each condition getting 2 \* matrix_length number of practice trials.
+
+## Hypotheses
 
 ## Matrix Construction and Verification
 
