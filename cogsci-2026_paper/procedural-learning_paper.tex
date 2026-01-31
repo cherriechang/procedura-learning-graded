@@ -191,7 +191,111 @@ Your introduction text here. You can cite references using
 
 \section{Method}\label{method}
 
-\subsection{Overall Design}\label{overall-design}
+\subsection{Participants}\label{participants}
+
+We recruited 251 participants (133 female, 118 male) on the online
+recruitment platform Prolific, screening for participants with an
+approval rating above 95\% from previous studies. Participants ranged in
+age from 18 to 75 years (\(\mu\)=35.6, Mdn=33, \(\sigma\)=11.8748024),
+representing 32 nationalities and 20 primary languages. Participants
+were compensated at \$12.00 per hour, with expected completion time
+varying by condition (\textasciitilde20-40 minutes). All participants
+provided informed consent prior to beginning the experiment. The study
+was approved by the Institutional Review Board at the MGH Institute of
+Health Professions.
+
+\subsection{Probabilistic Serial Reaction Time
+Task}\label{probabilistic-serial-reaction-time-task}
+
+\phantomsection\label{example-trial-screen}
+\begin{figure}[H]
+
+{\centering \includegraphics[width=0.8\linewidth,height=\textheight,keepaspectratio]{"../assets/example-trial-screen.png"}
+
+}
+
+\caption{An example trial screen in the 8-position condition of the
+experiment}
+
+\end{figure}%
+
+Like other serial reaction time task designs, our study tasks
+participants to respond to a visual stimulus that appears in one of
+several evenly-spaced positions on screen as quickly and accurately as
+possible, by pressing a corresponding key on the keyboard. In our
+implementation, this visual stimulus is a mole clad in nothing but a
+bright red bib and matching sunglasses (Figure 1); and a schematic of
+each position-to-keyboard mapping for each condition is shown in (Table
+1). Participants were evenly divided into 5 groups of 50 per condition,
+with the conditions differing in the number of positions (4, 5, 6, 7, 8)
+the mole can appear in.
+
+A participant is first given a text-based tutorial accompanied by an
+animated demonstration on which key to press in response to each
+position, then instructed to work through a set of practice trials where
+each position is visited twice in random order. After the practice
+section, the participant moves on to complete 20 blocks of trials, each
+separated with a self-paced break. Each block consists of trials 10x the
+number of positions in the participant's assigned condition. This design
+choice results in longer blocks for conditions with more positions, but
+ensures each position is visited an equal number of times on average
+across conditions. In both practice and main trials, participants are
+given feedback on correctness via a short message (a checkmark vs.~``Try
+again!'' + an error tone), and allowed to retry each failed trial until
+they respond correctly. Following standard SRTT protocol, there is also
+a 120ms response-stimulus interval (RSI) between trials {[}TODO:
+cite{]}. We find during piloting that allowing retries, combined with
+the 120ms RSI, prevents participants from making compensatory errors,
+where they too quickly press the wrong key in the next trial in an
+attempt to correct their current trial. After each block, participants
+are given adaptive feedback based on their accuracy and speed. At the
+end of the experiment, participants complete a brief questionnaire
+probing their explicit awareness of any patterns in the mole's
+appearances (Table 2).
+
+In addition to our well-dressed mole, a number of design choices were
+made to facilitate participant understanding and engagement. During the
+practice phase, each position on screen is labelled with its
+corresponding key character (e.g.~``A'', ``S'', ``D'') to help
+familiarize the participant with the keyboard mappings. These key labels
+disappear in the main trials to prevent participants from explicitly
+encoding the sequence of positions via their character labels, but
+reappear during retry of failed trials. To make the correspondence
+between the positions on screen and keyboard keys as automatic and
+intuitive as possible, we chose to use conventional QWERTY-based finger
+layouts for the key mappings across conditions (Table 2). While this
+decision helped reduce cognitive load from learning novel finger
+placements for most participants, we found during piloting that the
+larger gap between keys ``F'' and ``J'' on the keyboard introduces a
+discrepancy between the evenly-spaced on-screen positions and the
+unevenly spaced keyboard keys. This made participants more prone to
+making errors in the positions towards the middle of the screen compared
+to those on the outer edges, especially when number of positions scales
+{[}TODO: maybe run stats on pilot to find this effect{]}; and was not
+mitigated by shifting either hand's placement to close the extra gap,
+because the positions were still corresponding half to one hand and half
+to the other. After further piloting testing different visual aids, we
+settled on adding two hands visually to the bottom of the screen, each
+finger aligned with its target position (Figure 1). We received verbal
+feedback that this visual aid helped participants better map the spatial
+layout of the on-screen positions to their corresponding keys. Finally,
+the visual design of the ``positions'' on screen mimicked blank 3D
+keyboard keys that light up in pink when the mole appears on top, and
+look visibly ``pressed down'' when the participant presses the
+corresponding keyboard key. This design choice sought to make the
+on-screen positions diegetically linked to the keyboard keys to
+maximally reduce the mental distance between the two. This is important
+to enforce as much learning via motor memory as possible, rather than
+via visual-spatial memory of the on-screen positions.
+
+\subsection{Transition Matrices}\label{transition-matrices}
+
+Within each block, the sequence of positions is generated based on a
+transition matrix specific to the participant's assigned condition (see
+Transition Matrices section below for details). The sequence of
+positions is generated based on transition matrices of varying sizes,
+which define the probabilities of transitioning from one position to
+another.
 
 Our experiment involves a set of keyuses transition matrices to generate
 the sequence of positions in which a mole appears. Each matrix defines
@@ -200,23 +304,7 @@ screen, with the size of the matrix corresponding to the number of
 positions. For example, a 4x4 matrix defines transitions among 4
 positions, while an 8x8 matrix defines transitions among 8 positions.
 
-\subsection{Participants}\label{participants}
-
-We recruited 251 participants (133 female, 118 male) on the online
-recruitment platform Prolific, with 50 participants per condition (51 in
-5x5 condition). We screened for participants with an approval rating
-above 95\% from previous Prolific studies. Participants ranged in age
-from 18 to 75 years (\(\mu\)=35.6, Mdn=33, \(\sigma\)=11.8748024),
-spanning 32 nationalities and 20 languages spoken. Participants were
-compensated at a rate of \$12.00 per hour, with the experiment expected
-to take \textasciitilde20 (4x4 condition) to \textasciitilde40 (5x5
-condition) minutes in total. Partipants provided informed consent prior
-to beginning the experiment and all procedures have been approved by the
-Institutional Review Board at the MGH Institute of Health Professions.
-
-\subsection{Transition Matrices}\label{transition-matrices}
-
-We between-subjects manipulation of the number of positions to handle,
+Between-subjects manipulation of the number of positions to handle,
 which is the same thing as the size of the transition matrix used to
 generate the position sequence. Participants are randomly assigned to
 one of five matrix size conditions (4x4, 5x5, 6x6, 7x7, 8x8). The

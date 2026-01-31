@@ -14,7 +14,7 @@ const EXPERIMENT_CONFIG = {
 	error_tone_duration: 100,
 	error_feedback_duration: 200,
 	correct_feedback_duration: 200,
-	accuracy_threshold: 0.65, // for adaptive feedback
+	accuracy_threshold: 0.85, // for adaptive feedback
 	rt_threshold: 1000, // for adaptive feedback
 	estimated_trial_duration: 500, // ms (for estimating total experiment time)
 };
