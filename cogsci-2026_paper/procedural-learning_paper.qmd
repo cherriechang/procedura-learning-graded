@@ -1,0 +1,51 @@
+---
+title: "Procedural Learning with Graded Entropy"
+format:
+  pdf:
+    documentclass: article
+    classoption: [10pt,letterpaper]
+    pdf-engine: pdflatex
+    template-partials:
+      - before-body.tex
+    include-in-header:
+      text: |
+        \usepackage{cogsci}
+        \usepackage{pslatex}
+    keep-tex: true
+    cite-method: natbib
+    natbiboptions: [numbers]
+bibliography: CogSci_Template.bib
+editor: source
+---
+
+::: {.abstract}
+Your abstract text here. The abstract should be one paragraph. Following the abstract should be keywords.
+
+**Keywords:** your keywords; separated by; semicolons
+:::
+
+# Introduction
+
+Your introduction text here. You can cite references using `@NewellSimon1972a` or `[@ChalnickBillman1988a]`.
+
+# Method
+
+## Participants
+
+## Materials
+
+## Procedure
+
+# Results
+
+# Discussion
+
+# Acknowledgments
+
+Place acknowledgments (including funding information) here.
+
+# References
+
+::: {#refs}
+:::
+
